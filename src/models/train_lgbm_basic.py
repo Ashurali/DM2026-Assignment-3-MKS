@@ -10,9 +10,10 @@ Outputs:
 - log row appended to `submissions/log.md`
 """
 from __future__ import annotations
-
+from sklearnex import patch_sklearn
+patch_sklearn()
 import json
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 from datetime import date
 
 import numpy as np
@@ -52,9 +53,26 @@ def fit_predict_factory(params: dict, num_boost_round: int):
 
 
 def main() -> None:
-    meta_train = pd.read_parquet(ROOT / "data" / "meta_train.parquet")
-    meta_test = pd.read_parquet(ROOT / "data" / "meta_test.parquet")
+    meta_train = pd.read_parquet(ROOT / "data" / "meta_train.parquet", engine="pyarrow")
+    meta_test = pd.read_parquet(ROOT / "data" / "meta_test.parquet", engine="pyarrow")
+    def fix_server_path(local_path):
+        """Correctly parses Windows strings on Linux and rebases to server ROOT."""
+        # PureWindowsPath recognizes '\' even when running on Linux
+        win_path = PureWindowsPath(local_path)
+        parts = win_path.parts
+        
+        if "data" in parts:
+            data_index = parts.index("data")
+            # Create a relative path from 'data' onwards
+            relative_data_path = Path(*parts[data_index:])
+            # Join it with the server's ROOT (e.g., /home/nycu813/mike/...)
+            return ROOT / relative_data_path
+        return Path(local_path)
 
+    print("Adjusting paths for server environment...")
+    meta_train["path"] = meta_train["path"].apply(fix_server_path)
+    meta_test["path"] = meta_test["path"].apply(fix_server_path)
+    
     print(f"Train rows: {len(meta_train)} | Test rows: {len(meta_test)}")
     print("Building train features...")
     Xtr_df = build_dataset(meta_train["path"].tolist(), meta_train["file_id"].tolist())
@@ -81,6 +99,10 @@ def main() -> None:
         min_data_in_leaf=20,
         verbose=-1,
         seed=SEED,
+        device="cuda",  
+        gpu_device_id=0,      
+        num_threads=16,
+        gpu_use_dp=False
     )
     num_boost_round = 500
 
