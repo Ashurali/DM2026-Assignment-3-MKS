@@ -39,7 +39,9 @@ mean_std over the window ≈ activity intensity. var_of_std over time ≈ activi
 | C | Transformer encoder | Raw 6×300 sequence | Long-range structure; complements CNN errors |
 | D (stretch) | Pretrained TS foundation model (MOMENT/Chronos) | 6×300 sequence | Only if A+B+C blend is already top-3 by ~Day 11 |
 
-**Final submission = weighted blend of OOF probabilities**, weights tuned on out-of-fold predictions, plus test-time augmentation and one round of pseudo-labeling.
+**Ensemble cap:** 3–4 models total. Locked Day 1 — no expansion to 5+ even if time permits.
+
+**Final submission = weighted blend of OOF probabilities** (weights fitted on OOF; see §Phase 8) + **test-time augmentation** + (conditionally) one round of pseudo-labeling.
 
 ---
 
@@ -195,7 +197,11 @@ kagglehub          # data download
 
 **LightGBM training:**
 - Optuna hyperparameter search on OOF F1-macro (50–100 trials)
-- Class-weighted loss if EDA shows imbalance (>2× max/min class ratio)
+- Class-weighted loss (`class_weight="balanced"`). EDA confirmed 33× imbalance — non-optional.
+- **Minority-class oversampling** as a Phase-3 ablation variant. Two flavors to try:
+  1. Random oversample on minority classes (labels 2/3/4/5) before training, integer multiplier per class derived from inverse frequency.
+  2. SMOTE on the engineered feature space (sklearn-imbalanced `imblearn.over_sampling.SMOTE`).
+  Both must respect GroupKFold — apply only inside the training fold, never across the val boundary.
 - Save OOF predictions and OOF probabilities to `oof/lgbm_v1.npy`
 
 **Claude Code prompt:**
@@ -310,19 +316,21 @@ Triggered by Phase 1 §1 findings.
 **Step 1 — Stacking blend.**
 Stack OOF probs from LGBM + CNN-BiLSTM + Transformer (each is an N×6 matrix). Find blend weights by minimizing OOF cross-entropy with `scipy.optimize.minimize`, simplex constraint. Alternative: train a small Logistic Regression meta-learner on stacked probs with GroupKFold. Pick whichever has higher CV F1.
 
-**Step 2 — Test-time augmentation.**
+**Step 2 — Test-time augmentation. (CONFIRMED, locked Day 1)**
 For sequence models, predict on:
 - Original test sequence
 - Same sequence with small Gaussian noise (σ = 0.01)
 - Same sequence with tiny time-shift
-Average the 3 probability vectors before blending.
+- Same sequence with magnitude scaling (×0.95, ×1.05) — added per Day-1 decision
+Average the 5 probability vectors before blending. Note: do NOT include random rotation in TTA — that's a training-time augmentation and breaks the gravity-orientation prior at inference.
 
-**Step 3 — Pseudo-labeling (one round only).**
-- Take blended test probs
-- Mark test samples where `max_prob > 0.95` as confident
-- Add them to training set with their predicted labels
-- Retrain LGBM with this expanded set
-- Re-blend (do **not** retrain DL — too expensive for marginal gain)
+**Step 3 — Pseudo-labeling (CONDITIONAL).**
+Skeptical concern locked Day 1: pseudo-labeling can amplify model bias on minority classes when the base ensemble itself is uncertain there. Decision:
+- **Run only if** the blended ensemble shows CV F1-macro of **labels 2 and 4 individually ≥ 0.70**. Below that, the model isn't confident enough on minorities for pseudo-labels to be reliable.
+- **Confidence threshold 0.97** (raised from the original 0.95) given imbalance — fewer minority pseudo-labels but cleaner ones.
+- **Per-class quota:** cap pseudo-labels per class at 2× the train-set count for that class. Prevents the majority labels (0, 1) from drowning out minorities further.
+- One round only. Retrain LGBM only; DL retrain skipped.
+- Compare against no-PL blend in CV. If PL doesn't beat no-PL on per-class F1 for labels 2/3/4/5, drop it.
 
 **Deliverables:**
 - `oof/blend_final.npy`
@@ -434,6 +442,17 @@ These five inputs sharpen all subsequent phases — particularly Phase 3 feature
 **Deadline:** June 10, 2026, 23:55
 **Daily Kaggle submissions:** 3
 **Random seed convention:** `42` everywhere
+
+**Data layout (verified Day 1):**
+- `data/raw/train/train/User_NNN/NNNNN.csv` — 60 users (User_001…User_060), **11,020 files**
+- `data/raw/test/test/User_NNN/NNNNN.csv` — 40 users (User_061…User_100), **6,849 files**
+- `data/raw/sample_submission.csv` — 6,850 rows (`Id,Label`); 1 extra row vs. test count, presumably a header anomaly.
+- **Train/test users are DISJOINT** by ID range → strict GroupKFold by user is mandatory; `user_id` cannot be a feature.
+- CSV columns (train): `index, mean_x, mean_y, mean_z, std_x, std_y, std_z, label, file_id`. Test has the same minus `label`.
+- One label per file (replicated on every row). File length: **uniformly 300 rows**, no NaNs anywhere → no imputation needed.
+- 6 classes, **imbalance ratio 33×** (label-1=4695, label-4=142). Class-weighted loss everywhere.
+- Naive baselines (Day 1, GroupKFold-5): majority=0.1331, LR-on-6-means=0.5315 → Phase 3 LGBM target ≥0.65.
+- `file_id` is an integer (e.g., `11021`); on disk it's the zero-padded filename (`11021.csv`). Submission uses the unpadded integer.
 
 ---
 

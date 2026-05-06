@@ -1,0 +1,168 @@
+{
+  "section1": {
+    "train_files": 11020,
+    "test_files": 6849,
+    "train_nrows_value_counts": {
+      "300": 11020
+    },
+    "test_nrows_value_counts": {
+      "300": 6849
+    },
+    "train_files_with_any_nan": 0,
+    "test_files_with_any_nan": 0,
+    "train_total_nan_cells": 0,
+    "test_total_nan_cells": 0,
+    "train_duplicate_file_ids": 0,
+    "test_duplicate_file_ids": 0,
+    "train_label_inconstant_files": 0
+  },
+  "section2": {
+    "label_counts": {
+      "0": 4643,
+      "1": 4695,
+      "2": 358,
+      "3": 656,
+      "4": 142,
+      "5": 526
+    },
+    "n_classes": 6,
+    "imbalance_ratio": 33.063380281690144,
+    "users_with_all_labels": 6,
+    "n_train_users": 60,
+    "median_labels_per_user": 5.0
+  },
+  "section3": {
+    "n_train_users": 60,
+    "n_test_users": 40,
+    "overlap_count": 0,
+    "overlap_users": [],
+    "train_user_min": "User_001",
+    "train_user_max": "User_060",
+    "test_user_min": "User_061",
+    "test_user_max": "User_100"
+  },
+  "section4": {
+    "per_class_simple_feature_means": {
+      "0": {
+        "feat_mean_x": 0.0006,
+        "feat_mean_y": 0.0122,
+        "feat_mean_z": 0.18,
+        "feat_std_x": 0.0091,
+        "feat_std_y": 0.0079,
+        "feat_std_z": 0.0091
+      },
+      "1": {
+        "feat_mean_x": -0.2519,
+        "feat_mean_y": 0.0378,
+        "feat_mean_z": 0.2404,
+        "feat_std_x": 0.0573,
+        "feat_std_y": 0.044,
+        "feat_std_z": 0.0535
+      },
+      "2": {
+        "feat_mean_x": -0.2425,
+        "feat_mean_y": -0.0321,
+        "feat_mean_z": 0.0409,
+        "feat_std_x": 0.1018,
+        "feat_std_y": 0.0889,
+        "feat_std_z": 0.0954
+      },
+      "3": {
+        "feat_mean_x": -0.2499,
+        "feat_mean_y": -0.1667,
+        "feat_mean_z": 0.007,
+        "feat_std_x": 0.1802,
+        "feat_std_y": 0.1723,
+        "feat_std_z": 0.1552
+      },
+      "4": {
+        "feat_mean_x": -0.0212,
+        "feat_mean_y": -0.2078,
+        "feat_mean_z": 0.4682,
+        "feat_std_x": 0.2998,
+        "feat_std_y": 0.3628,
+        "feat_std_z": 0.2696
+      },
+      "5": {
+        "feat_mean_x": -0.3016,
+        "feat_mean_y": 0.0795,
+        "feat_mean_z": 0.2062,
+        "feat_std_x": 0.1106,
+        "feat_std_y": 0.0881,
+        "feat_std_z": 0.097
+      }
+    },
+    "tsne_n_points": 1642
+  },
+  "section5": {
+    "top_label": 1,
+    "top_users_for_label": [
+      "User_027",
+      "User_031",
+      "User_005",
+      "User_016",
+      "User_059"
+    ],
+    "between_user_var": 0.22432627397253552,
+    "within_user_var_mean": 0.10485010858144421,
+    "between_to_within_var_ratio": 2.1394949133341723
+  },
+  "section6": {
+    "sample_dominant_per_class": {
+      "0": {
+        "dominant_hz": 0.0033333333333333335,
+        "dominant_power": 0.0025288429191619366
+      },
+      "1": {
+        "dominant_hz": 0.023333333333333334,
+        "dominant_power": 5.324236881268248
+      },
+      "2": {
+        "dominant_hz": 0.013333333333333334,
+        "dominant_power": 0.7418556359629809
+      },
+      "3": {
+        "dominant_hz": 0.0033333333333333335,
+        "dominant_power": 1.629562942196553
+      },
+      "4": {
+        "dominant_hz": 0.4266666666666667,
+        "dominant_power": 0.3594698186190577
+      },
+      "5": {
+        "dominant_hz": 0.0033333333333333335,
+        "dominant_power": 67.88570308371906
+      }
+    }
+  },
+  "section7": {
+    "majority_cv_f1": 0.13305524093380924,
+    "majority_per_fold": [
+      0.10344465448435203,
+      0.09792000000000001,
+      0.09359766005849852,
+      0.09732516919110538,
+      0.09473003556417718
+    ],
+    "lr_cv_f1": 0.5315376263756882,
+    "lr_per_fold": [
+      0.5157223803063525,
+      0.5353059107841218,
+      0.541695010682711,
+      0.5366196370286714,
+      0.4901065222597258
+    ]
+  },
+  "meta": {
+    "random_state": 42,
+    "data_root": "D:\\Foreign\\NYCU\\Semester 1\\535703\u8cc7\u6599\u63a2\u52d8 Data Mining\\HW3\\DM2026-Assignment-3-MKS\\data\\raw",
+    "channels": [
+      "mean_x",
+      "mean_y",
+      "mean_z",
+      "std_x",
+      "std_y",
+      "std_z"
+    ]
+  }
+}

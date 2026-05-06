@@ -11,4 +11,5 @@ optuna>=3.5
 kagglehub>=0.2
 ipykernel
 jupyter
+jupytext
 pytest
