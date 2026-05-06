@@ -427,10 +427,10 @@ These five inputs sharpen all subsequent phases — particularly Phase 3 feature
 
 ## 9. Quick Reference
 
-**Repo:** `https://github.com/<your-handle>/DM2026-Assignment-3`
+**Repo:** `https://github.com/Ashurali/DM2026-Assignment-3-MKS`
 **Kaggle competition:** `nycu-data-mining-assignment-3`
-**Kaggle display name:** **must be your StudentID**
-**Report filename:** `DM_asg3_{studentID}.pdf`
+**Kaggle display name:** **314540066**
+**Report filename:** `DM_asg3_314540066.pdf`
 **Deadline:** June 10, 2026, 23:55
 **Daily Kaggle submissions:** 3
 **Random seed convention:** `42` everywhere
