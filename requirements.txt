@@ -1,0 +1,14 @@
+numpy>=1.26
+pandas>=2.1
+scipy>=1.11
+scikit-learn>=1.4
+lightgbm>=4.0
+matplotlib>=3.8
+seaborn>=0.13
+tqdm>=4.66
+pyarrow>=15.0
+optuna>=3.5
+kagglehub>=0.2
+ipykernel
+jupyter
+pytest
