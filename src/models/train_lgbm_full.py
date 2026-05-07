@@ -57,22 +57,38 @@ def make_class_weights(y: np.ndarray, n_classes: int) -> np.ndarray:
     return inv[y]
 
 
-def fit_predict_factory(params: dict, num_boost_round: int, smote: bool):
+def fit_predict_factory(params: dict, num_boost_round: int, smote: bool, smote_target: int = 1500):
     """Return a fold-level fit_predict closure. SMOTE is applied INSIDE the
-    train fold only — never on val. This keeps the GroupKFold honest."""
+    train fold only — never on val. This keeps the GroupKFold honest.
+
+    SMOTE strategy: instead of full-balancing minorities to the majority count
+    (which 3x's the training set and slows training a lot), oversample each
+    minority to `smote_target` samples. Default 1500 — gives each minority
+    class meaningful representation without bloating compute.
+    """
     def fit_predict(X_tr: np.ndarray, y_tr: np.ndarray, X_va: np.ndarray):
         if smote:
             from imblearn.over_sampling import SMOTE
-            # k_neighbors=3 is conservative; label-4 only has ~28/fold so we
-            # need < its smallest in-fold count. SMOTE auto-fails if too few.
-            min_count = int(np.bincount(y_tr).min())
-            k = max(1, min(3, min_count - 1))
-            try:
-                sm = SMOTE(random_state=SEED, k_neighbors=k)
-                X_tr, y_tr = sm.fit_resample(X_tr, y_tr)
-            except ValueError as e:
-                # If a class has too few samples, fall back to no-SMOTE silently
-                print(f"  SMOTE skipped this fold: {e}")
+            counts = np.bincount(y_tr, minlength=N_CLASSES)
+            min_count = int(counts[counts > 0].min())
+            k = max(1, min(5, min_count - 1))
+
+            # Build sampling_strategy: oversample minority classes (those with
+            # count < smote_target) up to smote_target. Leave majority alone.
+            strategy = {
+                c: smote_target
+                for c in range(N_CLASSES)
+                if 0 < counts[c] < smote_target
+            }
+            if not strategy:
+                # Nothing to oversample; skip
+                pass
+            else:
+                try:
+                    sm = SMOTE(random_state=SEED, k_neighbors=k, sampling_strategy=strategy)
+                    X_tr, y_tr = sm.fit_resample(X_tr, y_tr)
+                except ValueError as e:
+                    print(f"  SMOTE skipped this fold: {e}")
         w_tr = make_class_weights(y_tr, N_CLASSES)
         ds = lgb.Dataset(X_tr, label=y_tr, weight=w_tr)
         model = lgb.train(params, ds, num_boost_round=num_boost_round)
@@ -123,15 +139,24 @@ def get_features(meta_train: pd.DataFrame, meta_test: pd.DataFrame, exclude: lis
 
 
 def maybe_tune(X: np.ndarray, y: np.ndarray, groups: np.ndarray, base_params: dict, smote: bool, n_trials: int = 30) -> dict:
-    """Run an Optuna search optimising fold-mean F1-macro."""
+    """Run an Optuna search optimising fold-mean F1-macro.
+
+    Search space tuned for tractability: bounded num_boost_round and num_leaves
+    so each trial completes in a predictable time. Use --n-trials to control
+    total budget.
+    """
     import optuna
+    import time
     from src.utils.cv import cv_score
 
+    trial_count = {"i": 0}
+
     def objective(trial: "optuna.trial.Trial") -> float:
+        trial_count["i"] += 1
         params = dict(base_params)
         params.update(
-            num_leaves=trial.suggest_int("num_leaves", 31, 255),
-            learning_rate=trial.suggest_float("learning_rate", 0.01, 0.1, log=True),
+            num_leaves=trial.suggest_int("num_leaves", 31, 127),
+            learning_rate=trial.suggest_float("learning_rate", 0.02, 0.1, log=True),
             feature_fraction=trial.suggest_float("feature_fraction", 0.6, 1.0),
             bagging_fraction=trial.suggest_float("bagging_fraction", 0.6, 1.0),
             bagging_freq=trial.suggest_int("bagging_freq", 1, 10),
@@ -139,13 +164,18 @@ def maybe_tune(X: np.ndarray, y: np.ndarray, groups: np.ndarray, base_params: di
             lambda_l1=trial.suggest_float("lambda_l1", 1e-3, 5.0, log=True),
             lambda_l2=trial.suggest_float("lambda_l2", 1e-3, 5.0, log=True),
         )
-        nbr = trial.suggest_int("num_boost_round", 200, 800)
+        nbr = trial.suggest_int("num_boost_round", 200, 500)
         fp = fit_predict_factory(params, nbr, smote)
+        t0 = time.time()
         mean, _, _, _ = cv_score(fp, X, y, groups, n_splits=5, n_classes=N_CLASSES, verbose=False)
+        elapsed = time.time() - t0
+        print(f"  [trial {trial_count['i']:>3d}] f1={mean:.4f}  "
+              f"nbr={nbr} leaves={params['num_leaves']} lr={params['learning_rate']:.4f}  "
+              f"({elapsed:.1f}s)")
         return mean
 
     study = optuna.create_study(direction="maximize", sampler=optuna.samplers.TPESampler(seed=SEED))
-    study.optimize(objective, n_trials=n_trials, show_progress_bar=True)
+    study.optimize(objective, n_trials=n_trials, show_progress_bar=False)
     print(f"\nOptuna best CV F1-macro: {study.best_value:.4f}")
     print(f"Optuna best params: {study.best_params}")
     out = dict(base_params)
