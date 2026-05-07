@@ -146,7 +146,13 @@ def train_one_fold(
     ckpt_dir: Path,
 ) -> tuple[np.ndarray, np.ndarray, dict]:
     """Train one fold with checkpointing + early stopping. Returns (preds, probs, history)."""
-    train_ds = SeqDataset(Xtr, ytr, training=True, seed=SEED + fold_k)
+    aug_probs = {
+        "p_rot": args.p_rot,
+        "p_jitter": args.p_jitter,
+        "p_scale": args.p_scale,
+        "p_warp": args.p_warp,
+    }
+    train_ds = SeqDataset(Xtr, ytr, training=True, seed=SEED + fold_k, aug_probs=aug_probs)
     val_ds = SeqDataset(Xva, yva, training=False)
     train_loader = DataLoader(
         train_ds, batch_size=args.batch, shuffle=True,
@@ -284,6 +290,14 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--patience", type=int, default=8)
     p.add_argument("--n-workers", type=int, default=2)
     p.add_argument("--mixup-alpha", type=float, default=0.2)
+    # Augmentation toggles — defaults match PROJECT_PLAN §Phase 5.
+    # The v1 result showed L4 collapsing 0.90 → 0.75; the leading hypothesis
+    # is that random rotation flattens L4's gravity-orientation signature.
+    # Set --p-rot 0 to test that hypothesis.
+    p.add_argument("--p-rot", type=float, default=0.5, help="Rotation aug probability (0 disables).")
+    p.add_argument("--p-jitter", type=float, default=0.5)
+    p.add_argument("--p-scale", type=float, default=0.3)
+    p.add_argument("--p-warp", type=float, default=0.3)
     return p.parse_args()
 
 
@@ -368,7 +382,10 @@ def main() -> None:
         ])) + 1)
         print(f"Retraining final model for {epoch_budget} epochs (median best-val epoch + 1)")
 
-        full_ds = SeqDataset(Xtr, ytr, training=True, seed=SEED)
+        full_ds = SeqDataset(Xtr, ytr, training=True, seed=SEED, aug_probs={
+            "p_rot": args.p_rot, "p_jitter": args.p_jitter,
+            "p_scale": args.p_scale, "p_warp": args.p_warp,
+        })
         full_loader = DataLoader(
             full_ds, batch_size=args.batch, shuffle=True,
             num_workers=args.n_workers, worker_init_fn=worker_init_fn,

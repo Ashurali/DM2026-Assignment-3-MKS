@@ -130,6 +130,14 @@ def _time_warp(x: np.ndarray, sigma: float, rng: np.random.Generator) -> np.ndar
     return out
 
 
+DEFAULT_AUG_PROBS = {
+    "p_rot": 0.5,
+    "p_jitter": 0.5,
+    "p_scale": 0.3,
+    "p_warp": 0.3,
+}
+
+
 def augment_sample(
     x: np.ndarray,
     rng: np.random.Generator,
@@ -179,6 +187,10 @@ class SeqDataset(torch.utils.data.Dataset):
 
     Storing all data in RAM avoids re-reading 11k CSVs each epoch — the cache
     pre-build is in `data/seq_train.npy` / `data/seq_test.npy`.
+
+    `aug_probs` overrides any of {p_rot, p_jitter, p_scale, p_warp}; missing
+    keys fall back to DEFAULT_AUG_PROBS. Set p_rot=0 to disable rotation
+    augmentation (which the Phase-5 v1 result suggested was hurting label 4).
     """
 
     def __init__(
@@ -187,10 +199,12 @@ class SeqDataset(torch.utils.data.Dataset):
         y: Optional[np.ndarray] = None,
         training: bool = False,
         seed: int = 42,
+        aug_probs: Optional[dict] = None,
     ):
         self.X = X.astype(np.float32)  # (N, 6, 300)
         self.y = None if y is None else y.astype(np.int64)
         self.training = training
+        self.aug_probs = {**DEFAULT_AUG_PROBS, **(aug_probs or {})}
         # Per-worker RNG (re-seeded in worker_init_fn)
         self._rng = np.random.default_rng(seed)
 
@@ -200,7 +214,7 @@ class SeqDataset(torch.utils.data.Dataset):
     def __getitem__(self, idx: int):
         x = self.X[idx]
         if self.training:
-            x = augment_sample(x, self._rng)
+            x = augment_sample(x, self._rng, **self.aug_probs)
         x_t = torch.from_numpy(np.ascontiguousarray(x))
         if self.y is None:
             return x_t
