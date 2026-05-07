@@ -13,3 +13,4 @@ ipykernel
 jupyter
 jupytext
 pytest
+imbalanced-learn>=0.12
