@@ -198,10 +198,16 @@ kagglehub          # data download
 **LightGBM training:**
 - Optuna hyperparameter search on OOF F1-macro (50–100 trials)
 - Class-weighted loss (`class_weight="balanced"`). EDA confirmed 33× imbalance — non-optional.
-- **Minority-class oversampling** as a Phase-3 ablation variant. Two flavors to try:
+- **Minority-class oversampling** is now top-priority based on Day-1 sub02 result (label-2 F1 = 0.166, recall = 0.106). Two flavors to try:
   1. Random oversample on minority classes (labels 2/3/4/5) before training, integer multiplier per class derived from inverse frequency.
-  2. SMOTE on the engineered feature space (sklearn-imbalanced `imblearn.over_sampling.SMOTE`).
+  2. SMOTE on the engineered feature space (`imblearn.over_sampling.SMOTE`).
   Both must respect GroupKFold — apply only inside the training fold, never across the val boundary.
+- **Per-class F1 acceptance bar (binding constraints, not the macro number):**
+  - Label 2 ≥ 0.50 (currently 0.166 — the dominant bottleneck)
+  - Label 5 ≥ 0.70 (currently 0.627 — recall-bound, mistaken for something else)
+  - Label 3 ≥ 0.75 (currently 0.676)
+  - Labels 0, 1, 4 already pass.
+  If after Phase 3 the label-2 floor isn't met, escalate to oversampling/SMOTE before tuning HP further.
 - Save OOF predictions and OOF probabilities to `oof/lgbm_v1.npy`
 
 **Claude Code prompt:**
