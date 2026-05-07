@@ -1,22 +1,40 @@
 # Submission Log
 
-| Date | Version | Model | CV F1 | Public LB | Gap | Notes |
+## Headline submissions
+
+| Date | Version | Model | OOF F1 | Public LB | Gap | Notes |
 |---|---|---|---|---|---|---|
-| 2026-05-07 | sub01_majority | Majority class (label 1) | 0.1331 | 0.1024 | -0.0307 | Pipeline validator; gap is structural (test label-1 fraction ≈ 44.3% vs train 42.6%), not a CV leak |
-| _ref_ | _ | LR balanced on 6 column-means (CV-only, not submitted) | 0.5315 | — | — | EDA §7 trivial-linear anchor |
-| 2026-05-07 | sub02_lgbm_basic | LGBM (60 basic features, class-weighted, GPU) | 0.6795 (fold-mean) / 0.6906 (OOF) | 0.7473 | +0.068 (vs fold-mean) / +0.057 (vs OOF) | Per-class F1: [0.958, 0.8924, **0.1656**, 0.6759, 0.8253, 0.6266]. Label-2 collapse is the headline. Public > CV — GKF is pessimistic, not leaking. |
-| 2026-05-07 | sub_lgbm_full_v1 | LGBM full (271 features) | 0.7091 | _pending_ | _pending_ | per-class F1 [0.9644, 0.9024, 0.1731, 0.7127, 0.8961, 0.6777] |
-| 2026-05-07 | sub_lgbm_full_smote_v1 | LGBM full (271 features) | 0.7087 | _pending_ | _pending_ | per-class F1 [0.9652, 0.9046, 0.1992, 0.7103, 0.8664, 0.6768]; SMOTE |
-| 2026-05-08 | **sub_lgbm_full_tuned_v1** | LGBM full + Optuna 50 trials | 0.7167 / 0.7282 (OOF) | **0.7735** | **+0.045** | per-class F1 [0.9641, 0.9006, **0.2393**, 0.701, 0.8842, 0.6802]. Optuna lifted L2 by +0.066 vs v1; gap shrank from 0.056 → 0.045 (Optuna OOF-overfitting). |
-| 2026-05-08 | **sub_lgbm_full_tuned_v1_tuned** | LGBM full + Optuna + post-hoc threshold (multipliers=[1.495, 0.712, 1.901, 1.804, 0.786, 0.629]) | **0.7350 (OOF)** | **0.7816** | **+0.047** | per-class F1 [0.9627, 0.8892, **0.2749**, 0.7022, **0.8993**, 0.682]. **Best LGBM artefact.** Threshold tuning's +0.008 LB lift transferred fully (robust); Optuna's +0.007 OOF mostly didn't transfer to LB. |
-| 2026-05-07 | sub_lgbm_full_abl_no_fft | LGBM full (247 features) | 0.7049 | _pending_ | _pending_ | per-class F1 [0.9651, 0.9024, 0.1395, 0.7129, 0.8944, 0.6835]; excluded ['fft'] |
-| 2026-05-07 | sub_lgbm_full_abl_no_autocorr | LGBM full (265 features) | 0.7060 | _pending_ | _pending_ | per-class F1 [0.9643, 0.9022, 0.1485, 0.7123, 0.8913, 0.679]; excluded ['autocorr'] |
-| 2026-05-07 | sub_lgbm_full_abl_no_subwindow | LGBM full (211 features) | 0.7022 | _pending_ | _pending_ | per-class F1 [0.964, 0.9013, 0.1386, 0.7024, 0.8945, 0.6768]; excluded ['subwindow'] |
-| 2026-05-07 | sub_lgbm_full_abl_no_gravity | LGBM full (260 features) | 0.7064 | _pending_ | _pending_ | per-class F1 [0.9649, 0.9029, 0.1542, 0.7094, 0.8953, 0.6806]; excluded ['gravity'] |
-| 2026-05-07 | sub_lgbm_full_abl_no_jerk | LGBM full (247 features) | 0.7002 | _pending_ | _pending_ | per-class F1 [0.9652, 0.9023, 0.1218, 0.7153, 0.8889, 0.6746]; excluded ['jerk'] |
-| 2026-05-07 | sub_lgbm_full_abl_no_crossaxis | LGBM full (265 features) | 0.7054 | _pending_ | _pending_ | per-class F1 [0.9654, 0.9016, 0.1701, 0.7064, 0.8817, 0.6807]; excluded ['crossaxis'] |
-| 2026-05-07 | sub_lgbm_full_abl_no_zerocross | LGBM full (263 features) | 0.7030 | _pending_ | _pending_ | per-class F1 [0.9643, 0.9003, 0.1471, 0.713, 0.8961, 0.6659]; excluded ['zerocross'] |
-| 2026-05-07 | sub_lgbm_full_abl_no_per_file_norm | LGBM full (253 features) | 0.7081 | _pending_ | _pending_ | per-class F1 [0.9648, 0.9023, 0.1701, 0.7078, 0.8929, 0.6762]; excluded ['per_file_norm'] |
-| 2026-05-07 | sub_lgbm_full_abl_no_magnitude | LGBM full (243 features) | 0.7050 | _pending_ | _pending_ | per-class F1 [0.9654, 0.9008, 0.1636, 0.7067, 0.8832, 0.6799]; excluded ['magnitude'] |
-| 2026-05-07 | sub_lgbm_full_abl_no_basic_stats | LGBM full (187 features) | 0.7041 | _pending_ | _pending_ | per-class F1 [0.9645, 0.9003, 0.1157, 0.7123, 0.911, 0.6756]; excluded ['basic_stats'] |
-| 2026-05-07 | sub_lgbm_full_abl_no_quality | LGBM full (269 features) | 0.7054 | _pending_ | _pending_ | per-class F1 [0.9642, 0.902, 0.1563, 0.7115, 0.8889, 0.6798]; excluded ['quality'] |
+| 2026-05-07 | sub01_majority | Majority class (label 1) | 0.1331 | 0.1024 | −0.031 | Pipeline validator; gap is structural (test L1 fraction differs), not a CV leak. |
+| 2026-05-07 | sub02_lgbm_basic | LGBM (60 basic features) | 0.6906 | 0.7473 | +0.057 | Floor for the engineered-feature track. |
+| 2026-05-08 | **sub_lgbm_full_v1_tuned** | LGBM full (271) + post-hoc threshold | 0.7253 | **0.7808** | +0.056 | Threshold tuning validated end-to-end. |
+| 2026-05-08 | sub_lgbm_full_tuned_v1 | LGBM full + Optuna 50 trials | 0.7282 | 0.7735 | +0.045 | Optuna OOF-overfit; gap shrank from +0.056 to +0.045. |
+| 2026-05-08 | **sub_lgbm_full_tuned_v1_tuned** | LGBM full + Optuna + post-hoc threshold | 0.7350 | **0.7816** | +0.047 | **Best LGBM artefact.** Threshold tuning's +0.008 transferred fully; Optuna's +0.007 OOF mostly didn't transfer. |
+
+## Phase 5 — CNN-BiLSTM track
+
+All three OOF measured on the same 5-fold GroupKFold by user_id.
+
+| Date | Version | Config | OOF F1 | Per-class F1 (L0/L1/L2/L3/L4/L5) | Notes |
+|---|---|---|---|---|---|
+| 2026-05-07 | **sub_cnn_bilstm_v1** | default augs (p_rot=0.5, mixup α=0.2, lr 1e-3) | **0.6712** | 0.936 / 0.792 / 0.233 / 0.666 / 0.748 / 0.651 | **CNN endpoint.** L4 collapse (vs LGBM 0.90) is the headline. |
+| 2026-05-07 | sub_cnn_bilstm_v2 | re-run, slight aug variation | 0.6666 | 0.946 / 0.824 / 0.252 / 0.646 / 0.644 / 0.689 | Different per-class profile; useful for averaging if blended with v1. |
+| 2026-05-07 | sub_cnn_bilstm_v3 | p_rot=0, mixup=0, lr 5e-4, batch 128 | 0.6333 | 0.936 / 0.807 / 0.219 / 0.676 / 0.637 / 0.523 | Hypothesis (rotation hurts L4) **disproved** — v3 is worse on L4 *and* L5 collapses. CNN ceiling is architectural. |
+
+## Reference / not submitted
+
+| Version | Model | OOF F1 | Why not submitted |
+|---|---|---|---|
+| _ref_ LR baseline | LR balanced on 6 column-means | 0.5315 | EDA §7 anchor, never submitted. |
+| sub_lgbm_full_v1 | LGBM full 271 (no tune) | 0.7211 | Skipped in favor of v1_tuned (+0.004 OOF for free). |
+| sub_lgbm_full_smote_v1 | LGBM full + SMOTE | 0.7204 | Net wash (L2 +0.026 / L4 −0.030). Dropped. |
+
+## Phase 4 ablations (CV-only, not submitted)
+
+11 feature-group ablations. Full table in `reports/ablation_features.md`.
+Top-3 most-important groups by |ΔCV F1|: **jerk** (−0.0088), **subwindow** (−0.0068), **zerocross** (−0.0060). All others below the +0.005 noise floor (calibrated by `quality`-group ablation showing −0.0036 despite being constant features).
+
+## Calibration notes
+
+- **CV→LB gap for non-tuned models:** +0.056 (sub02, v1_tuned).
+- **CV→LB gap for Optuna-tuned models:** +0.045 (tuned_v1, tuned_v1_tuned). Optuna's HP search slightly OOF-overfits.
+- **Predicted blend OOF:** 0.74–0.75 (LGBM 0.7350 + small CNN decorrelation lift). Predicted LB: 0.79–0.80.
