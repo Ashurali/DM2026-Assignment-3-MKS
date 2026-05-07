@@ -159,6 +159,9 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--use-transformer-emb", default=None, help="e.g. transformer_v1")
     p.add_argument("--use-pair", action="append", default=[],
                    help="Pair specialist name(s) — e.g. l1_v_l2  (looks for oof/pair_<name>_oof.npy & _test.npy). Repeatable.")
+    p.add_argument("--use-oof", action="append", default=[],
+                   help="Base-model run name(s) whose 6-class OOF probs become 6 stacked feature columns "
+                        "(e.g. xgb_v1, cat_v1, minirocket_v1). Repeatable.")
     p.add_argument("--tune", action="store_true")
     p.add_argument("--n-trials", type=int, default=20)
     return p.parse_args()
@@ -202,6 +205,22 @@ def main() -> None:
         blocks_train.append(po)
         blocks_test.append(pe)
         block_names.append(f"pair_{pair_name}(1)")
+
+    for run_name in args.use_oof:
+        oof_p = ROOT / "oof" / f"{run_name}_oof.npy"
+        test_p = ROOT / "oof" / f"{run_name}_test_probs.npy"
+        if not (oof_p.exists() and test_p.exists()):
+            print(f"!!! OOF block '{run_name}' missing — skipping")
+            continue
+        oof_arr = np.load(oof_p).astype(np.float64)
+        test_arr = np.load(test_p).astype(np.float64)
+        # Sanity: should be (N, 6) shaped 6-class OOF
+        if oof_arr.ndim != 2 or oof_arr.shape[1] != N_CLASSES:
+            print(f"!!! OOF '{run_name}' has shape {oof_arr.shape} — expected (N, {N_CLASSES})")
+            continue
+        blocks_train.append(oof_arr)
+        blocks_test.append(test_arr)
+        block_names.append(f"oof_{run_name}({oof_arr.shape[1]})")
 
     X = np.concatenate(blocks_train, axis=1)
     Xte = np.concatenate(blocks_test, axis=1)
