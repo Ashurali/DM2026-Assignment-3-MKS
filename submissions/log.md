@@ -33,8 +33,23 @@ All three OOF measured on the same 5-fold GroupKFold by user_id.
 11 feature-group ablations. Full table in `reports/ablation_features.md`.
 Top-3 most-important groups by |ΔCV F1|: **jerk** (−0.0088), **subwindow** (−0.0068), **zerocross** (−0.0060). All others below the +0.005 noise floor (calibrated by `quality`-group ablation showing −0.0036 despite being constant features).
 
+## Phase 8 — Blend (Phase-8 step 1: scipy-simplex / LR-meta + post-hoc threshold)
+
+All blends use OOF-fitted weights; simplex method won every comparison (LR-meta consistently 0.01–0.04 lower).
+
+| Blend | Inputs | Simplex weights (top 3) | Blend OOF | + threshold | Notes |
+|---|---|---|---|---|---|
+| v1 | tuned_v1 + cnn v1 | 92% / 8% | 0.7315 | 0.7357 | minimal CNN weight |
+| v2 | tuned_v1 + v1 + cnn v1/v2 | 70% / 17% / 10% | 0.7301 | 0.7419 | LGBM-v1 untuned earned 17% — its non-Optuna profile decorrelates |
+| **v3** | + cnn v3 | 70% / 17% / 9% | 0.7294 | **0.7426** | **best.** v3's degraded-but-different errors add a smidge more decorrelation |
+| v4 | tuned_v1 + v1 + smote_v1 + cnn v1/v2 | 67% / 9% / 10% | 0.7311 | 0.7420 | SMOTE variant adds nothing meaningful |
+
+**Saturation around OOF 0.742.** Adding more base models past 5 doesn't help — simplex weights dilute below ~3% per CNN, no extra signal.
+
+**Predicted LB for blend v3:** 0.788–0.792 (using +0.045–0.050 gap from Optuna-heavy weighting). Should beat the current 0.7816 LB endpoint.
+
 ## Calibration notes
 
 - **CV→LB gap for non-tuned models:** +0.056 (sub02, v1_tuned).
 - **CV→LB gap for Optuna-tuned models:** +0.045 (tuned_v1, tuned_v1_tuned). Optuna's HP search slightly OOF-overfits.
-- **Predicted blend OOF:** 0.74–0.75 (LGBM 0.7350 + small CNN decorrelation lift). Predicted LB: 0.79–0.80.
+- **Predicted blend OOF (achieved):** 0.7426. Predicted LB: 0.788–0.792.
