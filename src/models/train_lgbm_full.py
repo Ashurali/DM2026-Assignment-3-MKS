@@ -88,7 +88,8 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--exclude", default="", help="Comma-separated feature groups to exclude (for ablation).")
     p.add_argument("--smote", action="store_true", help="Apply SMOTE oversampling per fold.")
     p.add_argument("--name", default="v1", help="Suffix for output files (e.g. 'v1', 'no_fft', 'smote_v1').")
-    p.add_argument("--tune", action="store_true", help="Run a small Optuna HP search (50 trials).")
+    p.add_argument("--tune", action="store_true", help="Run an Optuna HP search.")
+    p.add_argument("--n-trials", type=int, default=30, help="Number of Optuna trials (default: 30).")
     p.add_argument(
         "--gpu", action="store_true",
         help="Use device='cuda'/'gpu' for LightGBM training.")
@@ -99,8 +100,10 @@ def parse_args() -> argparse.Namespace:
 
 
 def get_features(meta_train: pd.DataFrame, meta_test: pd.DataFrame, exclude: list[str], cache: bool):
-    cache_train = ROOT / "data" / f"feat_train_{'_'.join(['none'] if not exclude else exclude)}.parquet"
-    cache_test = ROOT / "data" / f"feat_test_{'_'.join(['none'] if not exclude else exclude)}.parquet"
+    # Sort exclude list so cache key is deterministic regardless of CLI order
+    cache_key = "_".join(sorted(exclude)) if exclude else "none"
+    cache_train = ROOT / "data" / f"feat_train_{cache_key}.parquet"
+    cache_test = ROOT / "data" / f"feat_test_{cache_key}.parquet"
 
     if cache and cache_train.exists() and cache_test.exists():
         print(f"Loading cached features: {cache_train.name}")
@@ -119,8 +122,8 @@ def get_features(meta_train: pd.DataFrame, meta_test: pd.DataFrame, exclude: lis
     return Xtr_df, Xte_df
 
 
-def maybe_tune(X: np.ndarray, y: np.ndarray, groups: np.ndarray, base_params: dict, smote: bool) -> dict:
-    """Run a 50-trial Optuna search optimising fold-mean F1-macro."""
+def maybe_tune(X: np.ndarray, y: np.ndarray, groups: np.ndarray, base_params: dict, smote: bool, n_trials: int = 30) -> dict:
+    """Run an Optuna search optimising fold-mean F1-macro."""
     import optuna
     from src.utils.cv import cv_score
 
@@ -142,7 +145,7 @@ def maybe_tune(X: np.ndarray, y: np.ndarray, groups: np.ndarray, base_params: di
         return mean
 
     study = optuna.create_study(direction="maximize", sampler=optuna.samplers.TPESampler(seed=SEED))
-    study.optimize(objective, n_trials=50, show_progress_bar=True)
+    study.optimize(objective, n_trials=n_trials, show_progress_bar=True)
     print(f"\nOptuna best CV F1-macro: {study.best_value:.4f}")
     print(f"Optuna best params: {study.best_params}")
     out = dict(base_params)
@@ -202,7 +205,7 @@ def main() -> None:
 
     num_boost_round = 500
     if args.tune:
-        tuned = maybe_tune(X, y, groups, base_params, args.smote)
+        tuned = maybe_tune(X, y, groups, base_params, args.smote, n_trials=args.n_trials)
         num_boost_round = int(tuned.pop("__optuna_best_nbr", 500))
         params = tuned
     else:
