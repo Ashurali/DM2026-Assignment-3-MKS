@@ -49,18 +49,34 @@ def load_truth() -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     )
 
 
-def load_inputs(names: list[str]) -> tuple[list[np.ndarray], list[np.ndarray], list[str]]:
-    """Load OOF and test prob arrays for the given run names."""
+def load_inputs(names: list[str], use_tta: bool = False) -> tuple[list[np.ndarray], list[np.ndarray], list[str]]:
+    """Load OOF and test prob arrays for the given run names.
+
+    If `use_tta=True`, prefer `<run>_tta_test_probs.npy` over the plain test
+    probs whenever available. OOF probs are unchanged regardless — TTA only
+    affects test inference, not the OOF (which comes from per-fold models).
+    """
     oofs, tests, found = [], [], []
     for n in names:
         oof_p = ROOT / "oof" / f"{n}_oof.npy"
         test_p = ROOT / "oof" / f"{n}_test_probs.npy"
-        if not (oof_p.exists() and test_p.exists()):
-            print(f"!!! Skipping '{n}': missing {oof_p.name} or {test_p.name}")
+        tta_test_p = ROOT / "oof" / f"{n}_tta_test_probs.npy"
+        if not oof_p.exists():
+            print(f"!!! Skipping '{n}': missing {oof_p.name}")
+            continue
+        if use_tta and tta_test_p.exists():
+            chosen_test = tta_test_p
+            tag = "TTA"
+        elif test_p.exists():
+            chosen_test = test_p
+            tag = "plain"
+        else:
+            print(f"!!! Skipping '{n}': missing both regular and TTA test probs")
             continue
         oofs.append(np.load(oof_p))
-        tests.append(np.load(test_p))
+        tests.append(np.load(chosen_test))
         found.append(n)
+        print(f"  Loaded '{n}'  (test source: {tag} - {chosen_test.name})")
     if not found:
         raise SystemExit("No usable input runs found.")
     return oofs, tests, found
@@ -149,6 +165,8 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--inputs", nargs="+", default=["lgbm_full_tuned_v1", "cnn_bilstm_v1"])
     p.add_argument("--name", default="v1")
     p.add_argument("--no-threshold-tune", dest="threshold_tune", action="store_false")
+    p.add_argument("--tta", action="store_true",
+                   help="Prefer <run>_tta_test_probs.npy when available (OOF unchanged).")
     p.set_defaults(threshold_tune=True)
     return p.parse_args()
 
@@ -164,7 +182,7 @@ def report_per_class(name: str, y: np.ndarray, preds: np.ndarray) -> tuple[float
 def main() -> None:
     args = parse_args()
     y, groups, test_ids = load_truth()
-    oofs, tests, names = load_inputs(args.inputs)
+    oofs, tests, names = load_inputs(args.inputs, use_tta=args.tta)
 
     print(f"Blending {len(names)} model(s):")
     for n, P in zip(names, oofs):
