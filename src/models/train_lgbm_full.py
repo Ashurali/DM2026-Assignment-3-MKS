@@ -138,8 +138,12 @@ def get_features(meta_train: pd.DataFrame, meta_test: pd.DataFrame, exclude: lis
     return Xtr_df, Xte_df
 
 
-def maybe_tune(X: np.ndarray, y: np.ndarray, groups: np.ndarray, base_params: dict, smote: bool, n_trials: int = 30) -> dict:
+def maybe_tune(X: np.ndarray, y: np.ndarray, groups: np.ndarray, base_params: dict, smote: bool, n_trials: int = 30, study_name: str = "lgbm_full") -> dict:
     """Run an Optuna search optimising fold-mean F1-macro.
+
+    Resumability: study state persists to `optuna_studies/<study_name>.db`.
+    If interrupted, re-running with the same `--name` resumes from the next
+    untrained trial. Completed trials are preserved.
 
     Search space tuned for tractability: bounded num_boost_round and num_leaves
     so each trial completes in a predictable time. Use --n-trials to control
@@ -149,7 +153,29 @@ def maybe_tune(X: np.ndarray, y: np.ndarray, groups: np.ndarray, base_params: di
     import time
     from src.utils.cv import cv_score
 
-    trial_count = {"i": 0}
+    storage_dir = ROOT / "optuna_studies"
+    storage_dir.mkdir(exist_ok=True)
+    storage_path = storage_dir / f"{study_name}.db"
+    storage_url = f"sqlite:///{storage_path}"
+
+    study = optuna.create_study(
+        study_name=study_name,
+        storage=storage_url,
+        load_if_exists=True,
+        direction="maximize",
+        sampler=optuna.samplers.TPESampler(seed=SEED),
+    )
+
+    completed_before = sum(1 for t in study.trials if t.state == optuna.trial.TrialState.COMPLETE)
+    if completed_before > 0:
+        print(f"Resuming Optuna study '{study_name}' — {completed_before} completed trials already on disk.")
+        if completed_before >= n_trials:
+            print(f"Already at/above n_trials ({completed_before} ≥ {n_trials}). Skipping further trials.")
+        n_trials_remaining = max(0, n_trials - completed_before)
+    else:
+        n_trials_remaining = n_trials
+
+    trial_count = {"i": completed_before}
 
     def objective(trial: "optuna.trial.Trial") -> float:
         trial_count["i"] += 1
@@ -167,6 +193,8 @@ def maybe_tune(X: np.ndarray, y: np.ndarray, groups: np.ndarray, base_params: di
         nbr = trial.suggest_int("num_boost_round", 200, 500)
         fp = fit_predict_factory(params, nbr, smote)
         t0 = time.time()
+        # Note: no checkpoint_name here — each trial uses different params, so
+        # per-fold caching across trials would be incorrect.
         mean, _, _, _ = cv_score(fp, X, y, groups, n_splits=5, n_classes=N_CLASSES, verbose=False)
         elapsed = time.time() - t0
         print(f"  [trial {trial_count['i']:>3d}] f1={mean:.4f}  "
@@ -174,8 +202,8 @@ def maybe_tune(X: np.ndarray, y: np.ndarray, groups: np.ndarray, base_params: di
               f"({elapsed:.1f}s)")
         return mean
 
-    study = optuna.create_study(direction="maximize", sampler=optuna.samplers.TPESampler(seed=SEED))
-    study.optimize(objective, n_trials=n_trials, show_progress_bar=False)
+    if n_trials_remaining > 0:
+        study.optimize(objective, n_trials=n_trials_remaining, show_progress_bar=False)
     print(f"\nOptuna best CV F1-macro: {study.best_value:.4f}")
     print(f"Optuna best params: {study.best_params}")
     out = dict(base_params)
@@ -235,7 +263,8 @@ def main() -> None:
 
     num_boost_round = 500
     if args.tune:
-        tuned = maybe_tune(X, y, groups, base_params, args.smote, n_trials=args.n_trials)
+        # Use the run name as the Optuna study name so resume works per-run
+        tuned = maybe_tune(X, y, groups, base_params, args.smote, n_trials=args.n_trials, study_name=f"lgbm_full_{args.name}")
         num_boost_round = int(tuned.pop("__optuna_best_nbr", 500))
         params = tuned
     else:
@@ -243,7 +272,12 @@ def main() -> None:
 
     print("\nRunning 5-fold GroupKFold CV...")
     fp = fit_predict_factory(params, num_boost_round, args.smote)
-    mean, std, oof_preds, oof_probs = cv_score(fp, X, y, groups, n_splits=5, n_classes=N_CLASSES)
+    # Top-level CV pass uses fixed params, so per-fold checkpointing is correct.
+    # Checkpoint name = "{model}_{run_name}_final" to avoid clash with Optuna's per-trial CV.
+    mean, std, oof_preds, oof_probs = cv_score(
+        fp, X, y, groups, n_splits=5, n_classes=N_CLASSES,
+        checkpoint_name=f"lgbm_full_{args.name}_final",
+    )
 
     from sklearn.metrics import f1_score, classification_report
     per_class_f1 = f1_score(y, oof_preds, average=None)

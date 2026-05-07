@@ -5,6 +5,8 @@ __pycache__/
 .env
 data/
 oof/
+checkpoints/
+optuna_studies/
 submissions/*.csv
 *.pkl
 *.pt

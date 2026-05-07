@@ -3,15 +3,21 @@
 Every Phase-3+ model imports `make_folds`, `cv_score`, and `to_submission`
 from here so the CV scheme is identical across tracks (LGBM, CNN-BiLSTM,
 Transformer) and the OOF probabilities can be blended at the end.
+
+Resumability: pass `checkpoint_name="<run_name>"` to `cv_score` to enable
+per-fold caching under `checkpoints/<run_name>/`. Interrupted runs skip
+already-completed folds on restart.
 """
 from __future__ import annotations
 
-from typing import Callable, Tuple
+from typing import Callable, Optional, Tuple
 
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import GroupKFold
 from sklearn.metrics import f1_score
+
+from src.utils.checkpoint import load_fold, save_fold
 
 
 def make_folds(groups: np.ndarray, n_splits: int = 5) -> list[tuple[np.ndarray, np.ndarray]]:
@@ -35,6 +41,7 @@ def cv_score(
     n_splits: int = 5,
     n_classes: int = 6,
     verbose: bool = True,
+    checkpoint_name: Optional[str] = None,
 ) -> Tuple[float, float, np.ndarray, np.ndarray]:
     """Run group-aware CV and return mean/std F1-macro plus OOF preds and probs.
 
@@ -52,6 +59,10 @@ def cv_score(
         Number of target classes (default 6 for this competition).
     verbose : bool
         If True, print per-fold and aggregate F1.
+    checkpoint_name : str | None
+        If set, per-fold predictions are saved to `checkpoints/<name>/fold_<k>.npz`
+        as each fold completes. On restart, completed folds are loaded from
+        cache and skipped — making interrupted CV runs resumable.
 
     Returns
     -------
@@ -62,12 +73,23 @@ def cv_score(
     oof_probs = np.zeros((len(y), n_classes), dtype=np.float64)
     fold_f1: list[float] = []
     for k, (tr, va) in enumerate(folds):
-        preds, probs = fit_predict(X[tr], y[tr], X[va])
+        cached = None
+        if checkpoint_name is not None:
+            cached = load_fold(checkpoint_name, k)
+        if cached is not None:
+            preds, probs = cached
+            if verbose:
+                f_pre = float(f1_score(y[va], preds, average="macro"))
+                print(f"  Fold {k}: F1-macro = {f_pre:.4f}  (resumed from checkpoint)")
+        else:
+            preds, probs = fit_predict(X[tr], y[tr], X[va])
+            if checkpoint_name is not None:
+                save_fold(checkpoint_name, k, preds, probs)
         oof_preds[va] = preds
         oof_probs[va] = probs
         f = float(f1_score(y[va], preds, average="macro"))
         fold_f1.append(f)
-        if verbose:
+        if cached is None and verbose:
             print(f"  Fold {k}: F1-macro = {f:.4f}")
     mean = float(np.mean(fold_f1))
     std = float(np.std(fold_f1))

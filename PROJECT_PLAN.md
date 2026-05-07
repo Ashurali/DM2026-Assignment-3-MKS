@@ -369,6 +369,27 @@ Skeptical concern locked Day 1: pseudo-labeling can amplify model bias on minori
 
 ---
 
+## 4.5. Checkpointing Policy (locked Day 2)
+
+Every long-running script must be **resumable**. Server interruptions (process kill, SSH disconnect, OOM, OS reboot) must never destroy more than the work of the currently-executing fold/trial/epoch.
+
+**Mechanisms in `src/utils/checkpoint.py`:**
+
+- **Per-fold CV cache.** `cv_score(..., checkpoint_name="<run>")` saves each fold's `(preds, probs)` to `checkpoints/<run>/fold_<k>.npz` on completion (atomic write via `.tmp.npz` → rename). Restart skips already-completed folds.
+- **Optuna study persistence.** `maybe_tune(..., study_name="<run>")` opens an SQLite-backed `optuna.Study` at `optuna_studies/<run>.db` with `load_if_exists=True`. Completed trials persist; restart resumes at the next untrained trial.
+- **Idempotent orchestration.** Shell scripts (`run_ablation.sh`, `run_phase3_all.sh`) check for sidecar JSON existence and skip already-finished steps.
+
+**Required of every new training script (LGBM / DL / blend):**
+
+1. Pass a `checkpoint_name=args.name` to `cv_score` so per-fold caching activates.
+2. If using Optuna, pass `study_name=args.name` to persist trials.
+3. For DL specifically (Phase 5/6): save per-epoch model state plus best-val-state separately. On startup, look for `checkpoints/<run>/latest.pt` and resume from its epoch.
+4. Save OOF probs incrementally (per fold) and final-model state separately. Never trust an interrupted run; always check what's on disk first.
+
+`checkpoints/` and `optuna_studies/` are gitignored — local-machine state only, not shared across machines via git. Sync via `scp` or rerun locally if needed.
+
+---
+
 ## 5. Submission Discipline
 
 ### 5.1 Daily limit: 3 submissions
