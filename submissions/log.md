@@ -48,8 +48,32 @@ All blends use OOF-fitted weights; simplex method won every comparison (LR-meta 
 
 **Predicted LB for blend v3:** 0.788–0.792 (using +0.045–0.050 gap from Optuna-heavy weighting). Should beat the current 0.7816 LB endpoint.
 
+## Round-1 expansion blends (Tier-1 complete, May 8)
+
+After adding XGBoost, CatBoost, MiniRocket, Transformer, catch22 features, and stacked DL embeddings, multiple blend variants were tried:
+
+| Variant | Method | Inputs | Blend OOF | + threshold | Predicted LB |
+|---|---|---|---|---|---|
+| `blend_top4` | **LR-meta** | combo + xgb + cat + lgbm_tuned | 0.7585 | **0.7760** | **0.821–0.832** ← winner |
+| `lgbm_combo_combo_full_tuned` | single | 271 + catch22 + cnn_emb + tx_emb → LGBM | — | 0.7725 | 0.818–0.828 |
+| `blend_top4plusdl` | simplex | top4 + 2 CNNs + Transformer | 0.7642 | 0.7678 | 0.813–0.824 |
+| `blend_big_v1` | simplex | 9 models, all bases | 0.7591 | 0.7676 | 0.813–0.824 |
+| `blend_top5` | simplex | top4 + cnn_v1 | 0.7635 | 0.7675 | 0.812–0.823 |
+| `blend_top3` | simplex | combo + xgb + cat | 0.7621 | 0.7656 | 0.811–0.822 |
+| `blend_gbdts_only` | simplex | 6 GBDT-family models | 0.7551 | 0.7658 | 0.811–0.822 |
+
+**Key finding:** Adding DL models (CNN/Transformer) to the blend HURTS — they're useful *only* via stacked DL embeddings into LGBM (the `combo` model), not as direct blend inputs. The combo model alone is now so strong that further blending only helps with the right small set of decorrelated GBDTs.
+
+Per-class for winner (`blend_top4_tuned`):
+- L0=0.965, L1=0.901, **L2=0.331** (+99% from sub02's 0.166), L3=0.762, L4=0.919, L5=0.779
+
 ## Calibration notes
 
 - **CV→LB gap for non-tuned models:** +0.056 (sub02, v1_tuned).
 - **CV→LB gap for Optuna-tuned models:** +0.045 (tuned_v1, tuned_v1_tuned). Optuna's HP search slightly OOF-overfits.
 - **Predicted blend OOF (achieved):** 0.7426. Predicted LB: 0.788–0.792.
+| 2026-05-07 | sub_xgb_v1 | XGB (271 features, class-weighted) | 0.7165 (fold-mean) / 0.7290 (OOF) | _pending_ | _pending_ | per-class F1 [0.9659, 0.9045, 0.2416, 0.7093, 0.8826, 0.6701] |
+| 2026-05-07 | sub_cat_v1 | CAT (271 features, class-weighted) | 0.7128 (fold-mean) / 0.7220 (OOF) | _pending_ | _pending_ | per-class F1 [0.9609, 0.8834, 0.2715, 0.6902, 0.8905, 0.6352] |
+| 2026-05-08 | sub_minirocket_v1 | MiniRocket + LightGBM (~9996 random conv features) | 0.6693 (fold-mean) / 0.6785 (OOF) | _pending_ | _pending_ | per-class F1 [0.9677, 0.8927, 0.0515, 0.6929, 0.8864, 0.5795] |
+| 2026-05-08 | sub_transformer_v1 | Transformer encoder (4 layers, d_model=128) | 0.5933 (fold-mean) / 0.6028 (OOF) | _pending_ | _pending_ | per-class F1 [0.8881, 0.6943, 0.2132, 0.6471, 0.7492, 0.4248] |
+| 2026-05-08 | sub_lgbm_combo_combo_full | LGBM combo (engineered(271) + catch22(132) + cnn_emb(256) + transformer_emb(128)) | 0.7620 (fold-mean) / 0.7687 (OOF) | _pending_ | _pending_ | per-class F1 [0.9659, 0.9101, 0.2552, 0.7691, 0.9286, 0.7835] |
