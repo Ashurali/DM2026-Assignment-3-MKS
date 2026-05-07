@@ -5,6 +5,11 @@ scikit-learn>=1.4
 lightgbm>=4.0
 xgboost>=2.0
 catboost>=1.2
+# Time-series specific feature libraries (Tier-1 expansion)
+pycatch22>=0.4    # 22 curated time-series features
+sktime>=0.30      # for MiniRocket
+# tsfresh is heavy and slow — install on demand if EfficientFCParameters subset is needed
+# tsfresh>=0.20
 matplotlib>=3.8
 seaborn>=0.13
 tqdm>=4.66

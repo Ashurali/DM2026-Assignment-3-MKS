@@ -429,6 +429,43 @@ NOT your best public LB unless it also has top CV. Public LB can be a fluke on 5
 
 ---
 
+## 6.5. Tier-1 / Tier-2 / Tier-3 expansion (locked Day 14, May 7)
+
+After two weeks of work the standard 3-track plan is at LB 0.7816 vs leaderboard #1 at 0.8106. With ~5 weeks until deadline (Jun 10), the plan was upgraded to four tiers of additional moves. Keep the original phases, add these:
+
+**Tier 1 — already coded, run this week:**
+- catch22 features (132 features × 22 catch22-curated stats)
+- MiniRocket (~9,996 random conv features + LightGBM head)
+- XGBoost + CatBoost on the 271-feature catalog (architectural diversity in GBDTs)
+- Stacked features: DL embeddings (CNN/Transformer penultimate layer) → LGBM
+- Test-time augmentation on all DL final-models
+- Multi-seed CNN/Transformer averaging
+
+**Tier 2 — week of May 14:**
+- InceptionTime architecture
+- 1D ResNet
+- TCN (Temporal Conv Network)
+- SWA / EMA on DL training
+- Snapshot ensembling per training run
+- Probability calibration (Platt / isotonic)
+- Focal loss / label smoothing for minority-class boost
+
+**Tier 3 — week of May 21:**
+- Self-supervised pretraining on test sequences (masked reconstruction or contrastive)
+- Domain adaptation (DANN, CORAL alignment)
+- Pseudo-labeling with relaxed gate (revisit; was blocked at L2 ≥ 0.70)
+- Multi-level stacking (level-2 meta-learner on level-1 OOFs)
+
+**Final week (May 28 – Jun 10):**
+- Final blend tuning with all available base models
+- TTA refinement
+- Pick top-2 private-LB submissions manually
+- Report writing + GitHub polish
+
+**Realistic stretch target:** LB 0.82–0.84 (above current leader 0.8106).
+
+---
+
 ## 7. Schedule Summary
 
 | Day | Phase | Output |
