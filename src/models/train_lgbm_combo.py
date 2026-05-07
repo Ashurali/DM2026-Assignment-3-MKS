@@ -157,6 +157,8 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--use-catch22", action="store_true")
     p.add_argument("--use-cnn-emb", default=None, help="e.g. cnn_bilstm_v1")
     p.add_argument("--use-transformer-emb", default=None, help="e.g. transformer_v1")
+    p.add_argument("--use-pair", action="append", default=[],
+                   help="Pair specialist name(s) — e.g. l1_v_l2  (looks for oof/pair_<name>_oof.npy & _test.npy). Repeatable.")
     p.add_argument("--tune", action="store_true")
     p.add_argument("--n-trials", type=int, default=20)
     return p.parse_args()
@@ -188,6 +190,18 @@ def main() -> None:
         blocks_train.append(emb_tr.astype(np.float64))
         blocks_test.append(emb_te.astype(np.float64))
         block_names.append(f"transformer_emb({emb_tr.shape[1]})")
+
+    for pair_name in args.use_pair:
+        pair_oof = ROOT / "oof" / f"pair_{pair_name}_oof.npy"
+        pair_test = ROOT / "oof" / f"pair_{pair_name}_test.npy"
+        if not (pair_oof.exists() and pair_test.exists()):
+            print(f"!!! Pair '{pair_name}' files missing — skipping")
+            continue
+        po = np.load(pair_oof).reshape(-1, 1).astype(np.float64)
+        pe = np.load(pair_test).reshape(-1, 1).astype(np.float64)
+        blocks_train.append(po)
+        blocks_test.append(pe)
+        block_names.append(f"pair_{pair_name}(1)")
 
     X = np.concatenate(blocks_train, axis=1)
     Xte = np.concatenate(blocks_test, axis=1)
