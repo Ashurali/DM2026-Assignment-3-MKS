@@ -33,6 +33,11 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+# Make `src.*` importable regardless of how this script is invoked.
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
 try:
     import torch
     from torch.utils.data import DataLoader
@@ -40,7 +45,6 @@ except ImportError:
     print("ERROR: PyTorch not installed.", file=sys.stderr)
     raise
 
-ROOT = Path(__file__).resolve().parents[1]
 N_CLASSES = 6
 
 
