@@ -138,6 +138,24 @@ DEFAULT_AUG_PROBS = {
 }
 
 
+def per_file_zscore(x: np.ndarray, eps: float = 1e-6) -> np.ndarray:
+    """Per-file z-score normalisation: subtract each channel's mean and divide
+    by its std, computed over the time axis of THIS file only.
+
+    Tier A.2 fix per the literature synthesis: cross-subject HAR benchmarks
+    consistently recommend per-subject standardisation. Since each file in our
+    dataset comes from one subject doing one activity, per-file == per-subject.
+
+    Loses absolute-magnitude information. To compensate, callers may
+    concatenate the original mean/std as extra channels (we expose this via
+    `concat_stats=True` in SeqDataset).
+    """
+    arr = np.asarray(x, dtype=np.float32)  # (C, T)
+    mean = arr.mean(axis=1, keepdims=True)
+    std = arr.std(axis=1, keepdims=True)
+    return (arr - mean) / (std + eps)
+
+
 def augment_sample(
     x: np.ndarray,
     rng: np.random.Generator,
@@ -189,8 +207,15 @@ class SeqDataset(torch.utils.data.Dataset):
     pre-build is in `data/seq_train.npy` / `data/seq_test.npy`.
 
     `aug_probs` overrides any of {p_rot, p_jitter, p_scale, p_warp}; missing
-    keys fall back to DEFAULT_AUG_PROBS. Set p_rot=0 to disable rotation
-    augmentation (which the Phase-5 v1 result suggested was hurting label 4).
+    keys fall back to DEFAULT_AUG_PROBS.
+
+    `per_file_norm`: apply per-file z-score normalisation BEFORE augmentations.
+    Cross-subject HAR literature consistently recommends per-subject
+    standardisation. Each file == one subject in our dataset.
+    `concat_stats`: if True (and per_file_norm is True), concatenate the per-
+    channel mean and std as 2 extra channels so the model still sees absolute
+    magnitude. Output becomes (8, T) instead of (6, T) — caller must use a
+    model with in_channels=8.
     """
 
     def __init__(
@@ -200,11 +225,15 @@ class SeqDataset(torch.utils.data.Dataset):
         training: bool = False,
         seed: int = 42,
         aug_probs: Optional[dict] = None,
+        per_file_norm: bool = False,
+        concat_stats: bool = False,
     ):
         self.X = X.astype(np.float32)  # (N, 6, 300)
         self.y = None if y is None else y.astype(np.int64)
         self.training = training
         self.aug_probs = {**DEFAULT_AUG_PROBS, **(aug_probs or {})}
+        self.per_file_norm = per_file_norm
+        self.concat_stats = concat_stats and per_file_norm
         # Per-worker RNG (re-seeded in worker_init_fn)
         self._rng = np.random.default_rng(seed)
 
@@ -212,9 +241,26 @@ class SeqDataset(torch.utils.data.Dataset):
         return len(self.X)
 
     def __getitem__(self, idx: int):
-        x = self.X[idx]
+        x = self.X[idx]  # (6, T) — raw
+
+        # Order: augmentations first (operate on raw 6 channels), THEN per-file
+        # z-score, THEN optionally concat the original magnitude tracks as
+        # extra channels. This keeps rotation/jitter physically meaningful on
+        # raw data while still removing subject offsets at the model input.
         if self.training:
             x = augment_sample(x, self._rng, **self.aug_probs)
+
+        if self.per_file_norm:
+            # Capture absolute-magnitude tracks BEFORE z-score for optional concat
+            if self.concat_stats:
+                mean_mag_track = np.linalg.norm(x[:3], axis=0, keepdims=True)  # (1, T)
+                std_mag_track = np.linalg.norm(x[3:], axis=0, keepdims=True)   # (1, T)
+            mean = x.mean(axis=1, keepdims=True)
+            std = x.std(axis=1, keepdims=True)
+            x = (x - mean) / (std + 1e-6)
+            if self.concat_stats:
+                x = np.concatenate([x, mean_mag_track, std_mag_track], axis=0)  # (8, T)
+
         x_t = torch.from_numpy(np.ascontiguousarray(x))
         if self.y is None:
             return x_t

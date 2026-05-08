@@ -152,8 +152,10 @@ def train_one_fold(
         "p_scale": args.p_scale,
         "p_warp": args.p_warp,
     }
-    train_ds = SeqDataset(Xtr, ytr, training=True, seed=SEED + fold_k, aug_probs=aug_probs)
-    val_ds = SeqDataset(Xva, yva, training=False)
+    train_ds = SeqDataset(Xtr, ytr, training=True, seed=SEED + fold_k, aug_probs=aug_probs,
+                          per_file_norm=args.per_file_norm, concat_stats=args.concat_stats)
+    val_ds = SeqDataset(Xva, yva, training=False,
+                        per_file_norm=args.per_file_norm, concat_stats=args.concat_stats)
     train_loader = DataLoader(
         train_ds, batch_size=args.batch, shuffle=True,
         num_workers=args.n_workers, worker_init_fn=worker_init_fn,
@@ -164,7 +166,8 @@ def train_one_fold(
         num_workers=args.n_workers, pin_memory=True,
     )
 
-    model = CNNBiLSTM(n_classes=N_CLASSES).to(device)
+    in_ch = 8 if (args.per_file_norm and args.concat_stats) else 6
+    model = CNNBiLSTM(n_classes=N_CLASSES, in_channels=in_ch).to(device)
     optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=1e-4)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs)
     scaler = torch.amp.GradScaler("cuda" if device.type == "cuda" else "cpu", enabled=(device.type == "cuda"))
@@ -298,6 +301,12 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--p-jitter", type=float, default=0.5)
     p.add_argument("--p-scale", type=float, default=0.3)
     p.add_argument("--p-warp", type=float, default=0.3)
+    # Tier A.2: per-file z-score for cross-subject robustness
+    p.add_argument("--per-file-norm", action="store_true",
+                   help="Apply per-file z-score normalisation after augmentations.")
+    p.add_argument("--concat-stats", action="store_true",
+                   help="With --per-file-norm, concat orig magnitude tracks as 2 extra channels (8 input channels total). "
+                        "Requires modifying CNNBiLSTM in_channels=8.")
     return p.parse_args()
 
 
@@ -371,7 +380,8 @@ def main() -> None:
     final_ckpt = ckpt_dir / "final.pt"
     if final_ckpt.exists():
         print("Final model state already on disk — loading.")
-        model = CNNBiLSTM(n_classes=N_CLASSES).to(device)
+        in_ch = 8 if (args.per_file_norm and args.concat_stats) else 6
+    model = CNNBiLSTM(n_classes=N_CLASSES, in_channels=in_ch).to(device)
         ck = torch.load(final_ckpt, map_location=device, weights_only=False)
         model.load_state_dict(ck["model"])
     else:
@@ -385,13 +395,14 @@ def main() -> None:
         full_ds = SeqDataset(Xtr, ytr, training=True, seed=SEED, aug_probs={
             "p_rot": args.p_rot, "p_jitter": args.p_jitter,
             "p_scale": args.p_scale, "p_warp": args.p_warp,
-        })
+        }, per_file_norm=args.per_file_norm, concat_stats=args.concat_stats)
         full_loader = DataLoader(
             full_ds, batch_size=args.batch, shuffle=True,
             num_workers=args.n_workers, worker_init_fn=worker_init_fn,
             pin_memory=True, drop_last=True,
         )
-        model = CNNBiLSTM(n_classes=N_CLASSES).to(device)
+        in_ch = 8 if (args.per_file_norm and args.concat_stats) else 6
+    model = CNNBiLSTM(n_classes=N_CLASSES, in_channels=in_ch).to(device)
         optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=1e-4)
         scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=epoch_budget)
         scaler = torch.amp.GradScaler("cuda" if device.type == "cuda" else "cpu", enabled=(device.type == "cuda"))
@@ -425,7 +436,8 @@ def main() -> None:
         torch.save({"model": model.state_dict(), "epochs": epoch_budget}, final_ckpt)
 
     # Test prediction (no augmentations)
-    test_ds = SeqDataset(Xte, training=False)
+    test_ds = SeqDataset(Xte, training=False,
+                         per_file_norm=args.per_file_norm, concat_stats=args.concat_stats)
     test_loader = DataLoader(test_ds, batch_size=args.batch * 2, shuffle=False, num_workers=args.n_workers, pin_memory=True)
     model.eval()
     test_probs = []
