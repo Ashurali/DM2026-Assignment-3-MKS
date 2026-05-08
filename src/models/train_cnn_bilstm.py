@@ -381,7 +381,7 @@ def main() -> None:
     if final_ckpt.exists():
         print("Final model state already on disk — loading.")
         in_ch = 8 if (args.per_file_norm and args.concat_stats) else 6
-    model = CNNBiLSTM(n_classes=N_CLASSES, in_channels=in_ch).to(device)
+        model = CNNBiLSTM(n_classes=N_CLASSES, in_channels=in_ch).to(device)
         ck = torch.load(final_ckpt, map_location=device, weights_only=False)
         model.load_state_dict(ck["model"])
     else:
@@ -402,7 +402,7 @@ def main() -> None:
             pin_memory=True, drop_last=True,
         )
         in_ch = 8 if (args.per_file_norm and args.concat_stats) else 6
-    model = CNNBiLSTM(n_classes=N_CLASSES, in_channels=in_ch).to(device)
+        model = CNNBiLSTM(n_classes=N_CLASSES, in_channels=in_ch).to(device)
         optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=1e-4)
         scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=epoch_budget)
         scaler = torch.amp.GradScaler("cuda" if device.type == "cuda" else "cpu", enabled=(device.type == "cuda"))
