@@ -94,6 +94,34 @@ in different forms) HURTS. The GBDT in combo extracts non-linear interactions
 between per-class scores that scalar simplex/LR-meta blending can't match.
 combo_full_v2 alone IS the ensemble.
 
+## LB results — May 8 round-2 confirmations
+
+Three combo-track LB results revealed a structural issue:
+
+| Submission | OOF | LB | Gap | Status |
+|---|---|---|---|---|
+| `combo_full` RAW (no post-hoc) | 0.7687 | **0.7568** | **−0.012** | broken transfer |
+| `combo_full_v2` RAW (no post-hoc) | 0.7733 | **0.7577** | **−0.016** | broken transfer |
+| `combo_full + cal + thresh` | 0.7839 | **0.7924** | +0.008 | **best validated** ✅ |
+
+**Critical finding:** RAW combo models have NEGATIVE LB gaps. cal+thresh
+isn't OOF-overfitting — it's correcting a real **train-test feature
+distribution shift in the DL embeddings.**
+
+The combo model uses CNN-BiLSTM and Transformer penultimate-layer
+activations as features. Those embeddings come from a final-model
+retrained on the FULL train set, applied to both train and test:
+- Train embedding for sample i: from a model that MEMORIZED i during
+  training (DL final layers overfit)
+- Test embedding for sample i: pure generalization (sample never seen)
+
+So combo LGBM learns "memorized-pattern → label" but sees "clean-pattern"
+at test. cal+thresh recalibrates predictions against OOF (which represents
+unseen-data behavior), aligning test predictions with test-time reality.
+
+**Decision rule: combo-style models with DL embeddings MUST use cal+thresh.**
+Without it, the gap is structurally negative.
+
 ## Calibration notes
 
 - **CV→LB gap for non-tuned models:** +0.056 (sub02, v1_tuned).
