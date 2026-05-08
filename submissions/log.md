@@ -67,6 +67,33 @@ After adding XGBoost, CatBoost, MiniRocket, Transformer, catch22 features, and s
 Per-class for winner (`blend_top4_tuned`):
 - L0=0.965, L1=0.901, **L2=0.331** (+99% from sub02's 0.166), L3=0.762, L4=0.919, L5=0.779
 
+## Round-2 — combo_full_v2 with stacked base-model OOFs (May 8)
+
+Added 18 columns of stacked OOF probs (XGB + CatBoost + MiniRocket × 6 classes)
+to combo_full's existing features. New combo trained on **805 features** total.
+
+Pair specialists (binary L1-vs-L2 / L1-vs-L5) were tried first but pair-AUC
+came out 0.4–0.6 (random) — the same 271 features fail in binary mode that
+fail in multiclass, so specialists added nothing. Dropped from the plan.
+
+| Variant | OOF | + cal + thresh | Predicted LB |
+|---|---|---|---|
+| `combo_full_v2` (271 + catch22 + DL emb + 18 OOFs) | 0.7733 | **0.7910** | **0.836–0.847** ← 🥇 NEW BEST |
+| `blend_both_combos` (combo_v2 + combo_full) | 0.7812 (LR-meta) | 0.7847 | 0.830–0.841 |
+| `combo_full` (without OOFs) | 0.7687 | 0.7839 | 0.829–0.840 |
+| `blend_top4` (cal off, threshold) | 0.7585 | 0.7760 | 0.821–0.832 |
+
+Per-class for the new winner (`combo_full_v2` + cal + thresh):
+- L0=0.966, L1=0.908, **L2=0.393** (+19 pts from previous 0.275!), L3=0.768, L4=0.928, L5=0.783
+
+L2 trajectory: 0.166 (sub02) → 0.275 (combo) → 0.331 (blend_top4) → 0.374 (combo+thresh) → **0.393 (combo_v2+cal+thresh)**.
+
+**Key finding:** Once the combo model includes stacked OOF probs from
+XGB/CAT/MiniRocket, blending it with anything else (including with itself
+in different forms) HURTS. The GBDT in combo extracts non-linear interactions
+between per-class scores that scalar simplex/LR-meta blending can't match.
+combo_full_v2 alone IS the ensemble.
+
 ## Calibration notes
 
 - **CV→LB gap for non-tuned models:** +0.056 (sub02, v1_tuned).
@@ -77,3 +104,5 @@ Per-class for winner (`blend_top4_tuned`):
 | 2026-05-08 | sub_minirocket_v1 | MiniRocket + LightGBM (~9996 random conv features) | 0.6693 (fold-mean) / 0.6785 (OOF) | _pending_ | _pending_ | per-class F1 [0.9677, 0.8927, 0.0515, 0.6929, 0.8864, 0.5795] |
 | 2026-05-08 | sub_transformer_v1 | Transformer encoder (4 layers, d_model=128) | 0.5933 (fold-mean) / 0.6028 (OOF) | _pending_ | _pending_ | per-class F1 [0.8881, 0.6943, 0.2132, 0.6471, 0.7492, 0.4248] |
 | 2026-05-08 | sub_lgbm_combo_combo_full | LGBM combo (engineered(271) + catch22(132) + cnn_emb(256) + transformer_emb(128)) | 0.7620 (fold-mean) / 0.7687 (OOF) | _pending_ | _pending_ | per-class F1 [0.9659, 0.9101, 0.2552, 0.7691, 0.9286, 0.7835] |
+| 2026-05-08 | sub_lgbm_combo_combo_v1 | LGBM combo (engineered(271)) | 0.7094 (fold-mean) / 0.7199 (OOF) | _pending_ | _pending_ | per-class F1 [0.9648, 0.9031, 0.1747, 0.7141, 0.8889, 0.674] |
+| 2026-05-08 | sub_lgbm_combo_combo_full_v2 | LGBM combo (engineered(271) + catch22(132) + cnn_emb(256) + transformer_emb(128) + oof_xgb_v1(6) + oof_cat_v1(6) + oof_minirocket_v1(6)) | 0.7666 (fold-mean) / 0.7733 (OOF) | _pending_ | _pending_ | per-class F1 [0.9682, 0.9112, 0.2811, 0.7745, 0.9286, 0.7763] |
