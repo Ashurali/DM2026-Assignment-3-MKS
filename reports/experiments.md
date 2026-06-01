@@ -141,6 +141,15 @@ Dataset provenance (Bruno et al. 2014, **wrist-worn** ADL; **gravity NOT removed
 
 **CORRECTED DIAGNOSIS:** L1↔L2 are *separable* (AUC 0.86) and *optimally ranked + optimally thresholded* already. The L2-F1 ceiling (~0.384 in 6-class) is set by **13:1 imbalance + 3-way {L1,L3,L5} entanglement + the macro-F1 metric**, NOT by separability, features, or models. A perfect ranker on a 7%-base-rate class entangled with 3 neighbours simply cannot push macro-F1 higher. This is a metric/class-structure property — it supersedes the looser "intrinsic overlap" story and is the precise reason **0.8200 is the realizable ceiling**. The only thing that ever helped (orientation, +0.0009) did so by adding *complementary* signal that nudged the ranking; no such signal remains in 1 Hz/no-gyro data.
 
+**Hierarchical cascade vs flat — "would L1-vs-rest → L2-vs-rest → {L3,L4,L5} be more optimal?" (2026-06-01, `scripts/hierarchy_vs_flat.py`).** Tested the cascade hypothesis head-to-head against a flat 6-class model on identical features + identical post-processing (per-class isotonic 5-fold OOF + nested coordinate-ascent threshold), cross-user. Soft chain-rule cascade (no hard peel → best case). **FLAT wins decisively:**
+| arch | nested macro | L0 | L1 | L2 | L3 | L4 | L5 |
+|---|---|---|---|---|---|---|---|
+| **FLAT** | **0.7331** | 0.966 | 0.897 | **0.265** | 0.706 | 0.901 | 0.665 |
+| CASCADE-U (L1\|L2\|rest, user's order) | 0.7139 | 0.965 | 0.895 | **0.247** | 0.664 | 0.882 | 0.632 |
+| CASCADE-E (easy-first L0\|L4\|L1\|L2\|{L3,L5}) | 0.7223 | 0.964 | 0.901 | **0.274** | 0.670 | 0.880 | 0.645 |
+
+**The user's exact order is the WORST (−0.0192), and it specifically degrades L2 (0.247 < flat 0.265)** — the predicted error-propagation cost: peeling L1 first (L2's biggest confuser, 46% of L2s look L1-ish) multiplies `(1−P(L1))` into `P(L2)`, systematically deflating L2. Easy-first (CASCADE-E) recovers some (nudges L2 to 0.274) but still loses overall (−0.0108) because the residual stages bleed L3/L4/L5. **Mechanism:** a flat 6-class model weighs L1/L3/L5 *simultaneously* when scoring L2 — exactly what the 3-way entanglement demands — whereas a cascade commits to an ordering and can't recover mass routed down the wrong branch. **Consistent with production's own evidence:** the blend already weights flat P1 at 0.842 vs hierarchical P2 at 0.158 — the optimizer's verdict that flat is the backbone; and P2 is a *coarse→fine* hierarchy (group-then-refine, blended with flat), not naive class-by-class peeling. The *useful* hierarchy is already captured at its optimal weight. **A class-by-class cascade is strictly worse → not a lever.**
+
 ## What we'd do differently with more time
 
 1. **Refit combo_full_v2 with EO mask** to see if Pipeline 1 also gains from feature pruning. The current combo_v2 keeps all 805 cols.
