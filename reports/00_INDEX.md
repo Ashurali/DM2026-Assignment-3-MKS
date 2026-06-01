@@ -61,6 +61,8 @@ Both carry the validated injection; they hedge the OOF↔public divergence:
 ## 8. Build #1 — tilt-trajectory L1↔L2 model — DONE (negative)
 Derived a clean low-dim orientation trajectory (pitch/roll/incl/angular-speed/intensity/grav-mag, per-file z-scored) → 1D-CNN (`src/models/train_orient_traj.py`, `scripts/orient_traj_integrate.py`). **Result: L1↔L2 sep 0.5785 < summary-stat orient_lgbm (0.617) < production (0.657); injection +0.0004 robust, does not beat 0.8200.** Motion-shape hypothesis falsified at 1 Hz. Meta-finding: **GBDT-on-summary-features > neural-on-sequence** for this data. Representation-layer attack exhausted → **0.8200 is the realizable ceiling.**
 
+**Unsupervised/SSL feasibility probe — DONE (negative, `scripts/unsup_separability_probe.py`).** Label-free confirmation of the ceiling: on the full 2864-col stack, cross-user — unsupervised KMeans finds **zero** L2 axis (best-map = trivial all-L1, 0.482), and even *fully-supervised* models cap at L2-F1 **0.31** (LR; nonlinear RF/HGB worse), *below* production's 0.38. Geometry tracks **activity not user** (ARI 0.319 vs 0.005) ⇒ **diagnosis corrected: the L1↔L2 confusion is intrinsic class overlap, not a user-spurious attribute** (why DG only gave +0.0008; why new *physical* signal was the only lever). SSL re-encodes existing info — can't recover what 1 Hz/no-gyro destroyed. **Not worth a server run.**
+
 The remaining levers are non-modeling: (a) de-risk the threshold grid for the private split (hygiene, not a gain), (b) a *fundamentally* different approach to L2 (beyond the 1 Hz/no-gyro data we're permitted).
 
 ## 9. Reproduction / ops notes
