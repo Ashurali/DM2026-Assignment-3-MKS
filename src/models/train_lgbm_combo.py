@@ -164,6 +164,10 @@ def parse_args() -> argparse.Namespace:
                         "(e.g. xgb_v1, cat_v1, minirocket_v1). Repeatable.")
     p.add_argument("--tune", action="store_true")
     p.add_argument("--n-trials", type=int, default=20)
+    p.add_argument("--learning-rate", type=float, default=0.05)
+    p.add_argument("--num-leaves", type=int, default=63)
+    p.add_argument("--min-data", type=int, default=20)
+    p.add_argument("--num-boost-round", type=int, default=500)
     return p.parse_args()
 
 
@@ -236,14 +240,14 @@ def main() -> None:
     import lightgbm as lgb
     base_params = dict(
         objective="multiclass", num_class=N_CLASSES, metric="multi_logloss",
-        learning_rate=0.05, num_leaves=63, feature_fraction=0.9,
-        bagging_fraction=0.9, bagging_freq=5, min_data_in_leaf=20,
+        learning_rate=args.learning_rate, num_leaves=args.num_leaves, feature_fraction=0.9,
+        bagging_fraction=0.9, bagging_freq=5, min_data_in_leaf=args.min_data,
         verbose=-1, seed=SEED, num_threads=16,
     )
     if args.gpu:
         base_params.update(device="cuda", gpu_device_id=0, gpu_use_dp=False)
 
-    num_boost_round = 500
+    num_boost_round = args.num_boost_round
     params = base_params
 
     if args.tune:

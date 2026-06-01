@@ -268,7 +268,18 @@ class SeqDataset(torch.utils.data.Dataset):
 
 
 def worker_init_fn(worker_id: int):
-    """Re-seed each DataLoader worker so augmentations are independent."""
+    """Re-seed each DataLoader worker so augmentations are independent.
+
+    Defensive: handle dataset wrappers (e.g. SeqDatasetWithDomain) that
+    forward to an inner SeqDataset. We re-seed whichever object actually
+    holds the `_rng` attribute.
+    """
     info = torch.utils.data.get_worker_info()
-    base = info.dataset._rng.bit_generator.state["state"]["state"]
-    info.dataset._rng = np.random.default_rng((base + worker_id) % (2 ** 63 - 1))
+    ds = info.dataset
+    # If the dataset is a wrapper, look for `_rng` on its inner.
+    if not hasattr(ds, "_rng") and hasattr(ds, "inner") and hasattr(ds.inner, "_rng"):
+        ds = ds.inner
+    if not hasattr(ds, "_rng"):
+        return  # nothing to re-seed; wrapper has no aug RNG
+    base = ds._rng.bit_generator.state["state"]["state"]
+    ds._rng = np.random.default_rng((base + worker_id) % (2 ** 63 - 1))

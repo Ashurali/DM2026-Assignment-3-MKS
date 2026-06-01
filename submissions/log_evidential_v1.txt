@@ -1,0 +1,122 @@
+=== train_evidential_v1.py starting ===
+Device: cpu
+Stage1 epochs: 120  anneal: 50
+Stage2 epochs: 40  anchor β: 0.001
+Hidden dim: 256  dropout: 0.3
+Source features (engineered, standardised): train (11020, 271)  test (6849, 271)
+
+  Fold 0: tr=8831  va=2189
+    S1 train=6909  S2 calibration=1922
+    Stage 1 class weights (sqrt-inv): [0.358, 0.359, 1.263, 0.936, 2.008, 1.074]
+      [S1 ep 20/120]  loss=0.1601  λ_t=0.40  acc=0.893  u=0.321
+      [S1 ep 40/120]  loss=0.1344  λ_t=0.80  acc=0.941  u=0.320
+      [S1 ep 60/120]  loss=0.1006  λ_t=1.00  acc=0.988  u=0.270
+      [S1 ep 80/120]  loss=0.0844  λ_t=1.00  acc=0.949  u=0.267
+      [S1 ep 100/120]  loss=0.0740  λ_t=1.00  acc=0.945  u=0.250
+      [S1 ep 120/120]  loss=0.0765  λ_t=1.00  acc=0.960  u=0.234
+      [S2 ep 10/40]  loss=0.3031  acc=0.885  wrong_u=0.360
+      [S2 ep 20/40]  loss=0.2630  acc=0.885  wrong_u=0.301
+      [S2 ep 30/40]  loss=0.2513  acc=0.831  wrong_u=0.331
+      [S2 ep 40/40]  loss=0.2464  acc=0.915  wrong_u=0.309
+    Fold 0 OOF F1: 0.6505  per-class: [0.942, 0.872, 0.133, 0.69, 0.833, 0.432]
+    Fold 0 mean uncertainty (val): 0.190  L2 mean u: 0.346
+    Fold 0 done in 39.9s
+
+  Fold 1: tr=8813  va=2207
+    S1 train=6971  S2 calibration=1842
+    Stage 1 class weights (sqrt-inv): [0.329, 0.322, 1.19, 0.86, 2.329, 0.969]
+      [S1 ep 20/120]  loss=0.1733  λ_t=0.40  acc=0.864  u=0.388
+      [S1 ep 40/120]  loss=0.1542  λ_t=0.80  acc=0.881  u=0.400
+      [S1 ep 60/120]  loss=0.1259  λ_t=1.00  acc=0.932  u=0.326
+      [S1 ep 80/120]  loss=0.1073  λ_t=1.00  acc=0.915  u=0.323
+      [S1 ep 100/120]  loss=0.0937  λ_t=1.00  acc=0.983  u=0.254
+      [S1 ep 120/120]  loss=0.0918  λ_t=1.00  acc=0.966  u=0.228
+      [S2 ep 10/40]  loss=0.2197  acc=0.940  wrong_u=0.485
+      [S2 ep 20/40]  loss=0.1977  acc=0.980  wrong_u=0.389
+      [S2 ep 30/40]  loss=0.1865  acc=0.980  wrong_u=0.180
+      [S2 ep 40/40]  loss=0.1932  acc=0.920  wrong_u=0.341
+    Fold 1 OOF F1: 0.7062  per-class: [0.957, 0.873, 0.127, 0.713, 0.824, 0.743]
+    Fold 1 mean uncertainty (val): 0.199  L2 mean u: 0.331
+    Fold 1 done in 43.4s
+
+  Fold 2: tr=8807  va=2213
+    S1 train=6988  S2 calibration=1819
+    Stage 1 class weights (sqrt-inv): [0.359, 0.36, 1.295, 0.983, 1.823, 1.18]
+      [S1 ep 20/120]  loss=0.1893  λ_t=0.40  acc=0.868  u=0.336
+      [S1 ep 40/120]  loss=0.1611  λ_t=0.80  acc=0.895  u=0.360
+      [S1 ep 60/120]  loss=0.1383  λ_t=1.00  acc=0.947  u=0.337
+      [S1 ep 80/120]  loss=0.1115  λ_t=1.00  acc=0.961  u=0.267
+      [S1 ep 100/120]  loss=0.1033  λ_t=1.00  acc=0.895  u=0.335
+      [S1 ep 120/120]  loss=0.0986  λ_t=1.00  acc=0.961  u=0.260
+      [S2 ep 10/40]  loss=0.2502  acc=0.852  wrong_u=0.184
+      [S2 ep 20/40]  loss=0.2397  acc=0.815  wrong_u=0.336
+      [S2 ep 30/40]  loss=0.2294  acc=0.926  wrong_u=0.627
+      [S2 ep 40/40]  loss=0.2266  acc=0.889  wrong_u=0.264
+    Fold 2 OOF F1: 0.7287  per-class: [0.948, 0.89, 0.141, 0.734, 0.903, 0.757]
+    Fold 2 mean uncertainty (val): 0.182  L2 mean u: 0.335
+    Fold 2 done in 52.0s
+
+  Fold 3: tr=8823  va=2197
+    S1 train=6988  S2 calibration=1835
+    Stage 1 class weights (sqrt-inv): [0.352, 0.349, 1.228, 0.915, 2.14, 1.015]
+      [S1 ep 20/120]  loss=0.1719  λ_t=0.40  acc=0.829  u=0.358
+      [S1 ep 40/120]  loss=0.1604  λ_t=0.80  acc=0.895  u=0.360
+      [S1 ep 60/120]  loss=0.1304  λ_t=1.00  acc=0.921  u=0.302
+      [S1 ep 80/120]  loss=0.1042  λ_t=1.00  acc=0.947  u=0.276
+      [S1 ep 100/120]  loss=0.0917  λ_t=1.00  acc=0.934  u=0.288
+      [S1 ep 120/120]  loss=0.0926  λ_t=1.00  acc=0.921  u=0.319
+      [S2 ep 10/40]  loss=0.2696  acc=0.884  wrong_u=0.243
+      [S2 ep 20/40]  loss=0.2335  acc=0.930  wrong_u=0.529
+      [S2 ep 30/40]  loss=0.2296  acc=0.884  wrong_u=0.321
+      [S2 ep 40/40]  loss=0.2290  acc=0.907  wrong_u=0.570
+    Fold 3 OOF F1: 0.6824  per-class: [0.959, 0.898, 0.211, 0.696, 0.946, 0.384]
+    Fold 3 mean uncertainty (val): 0.204  L2 mean u: 0.457
+    Fold 3 done in 48.5s
+
+  Fold 4: tr=8806  va=2214
+    S1 train=7110  S2 calibration=1696
+    Stage 1 class weights (sqrt-inv): [0.34, 0.34, 1.309, 0.9, 2.168, 0.942]
+      [S1 ep 20/120]  loss=0.1679  λ_t=0.40  acc=0.874  u=0.352
+      [S1 ep 40/120]  loss=0.1446  λ_t=0.80  acc=0.889  u=0.368
+      [S1 ep 60/120]  loss=0.1250  λ_t=1.00  acc=0.904  u=0.328
+      [S1 ep 80/120]  loss=0.1021  λ_t=1.00  acc=0.929  u=0.290
+      [S1 ep 100/120]  loss=0.0881  λ_t=1.00  acc=0.944  u=0.276
+      [S1 ep 120/120]  loss=0.0879  λ_t=1.00  acc=0.955  u=0.251
+      [S2 ep 10/40]  loss=0.2829  acc=0.869  wrong_u=0.346
+      [S2 ep 20/40]  loss=0.2561  acc=0.869  wrong_u=0.359
+      [S2 ep 30/40]  loss=0.2472  acc=0.894  wrong_u=0.456
+      [S2 ep 40/40]  loss=0.2410  acc=0.906  wrong_u=0.344
+    Fold 4 OOF F1: 0.6752  per-class: [0.943, 0.864, 0.132, 0.683, 0.854, 0.576]
+    Fold 4 mean uncertainty (val): 0.194  L2 mean u: 0.346
+    Fold 4 done in 52.5s
+
+============================================================
+Evidential v1 OOF F1: 0.6968
+Per-class F1: [0.9495, 0.8798, 0.1483, 0.7034, 0.8841, 0.6155]
+              precision    recall  f1-score   support
+
+          L0     0.9343    0.9651    0.9495      4643
+          L1     0.8619    0.8984    0.8798      4695
+          L2     0.3070    0.0978    0.1483       358
+          L3     0.6966    0.7104    0.7034       656
+          L4     0.9104    0.8592    0.8841       142
+          L5     0.6998    0.5494    0.6155       526
+
+    accuracy                         0.8721     11020
+   macro avg     0.7350    0.6800    0.6968     11020
+weighted avg     0.8574    0.8721    0.8623     11020
+
+
+Uncertainty distribution by class (mean ± std):
+  L0: mean u=0.132  correct u=0.126  wrong u=0.292
+  L1: mean u=0.207  correct u=0.188  wrong u=0.370
+  L2: mean u=0.358  correct u=0.627  wrong u=0.329
+  L3: mean u=0.335  correct u=0.297  wrong u=0.430
+  L4: mean u=0.210  correct u=0.175  wrong u=0.425
+  L5: mean u=0.333  correct u=0.286  wrong u=0.390
+
+Saved oof/evidential_v1_oof.npy  (11020, 6)
+Saved oof/evidential_v1_test_probs.npy  (6849, 6)
+Saved oof/evidential_v1_meta.json
+
+=== train_evidential_v1.py done ===

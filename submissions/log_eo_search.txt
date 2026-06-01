@@ -1,0 +1,33 @@
+=== eo_feature_select.py starting ===
+Loaded: X_search (11020, 403)  X_always (11020, 402)
+
+Baseline (all engineered + catch22 ON):
+  baseline fitness: 0.28255  (F1 ≈ 0.7247)  eval_time=84.4s
+
+Running EO: particles=15  iter=25  D=403
+  init particle 0: |S|=403  fitness=0.28255
+  init particle 1: |S|=198  fitness=0.27280
+  init particle 2: |S|=205  fitness=0.27736
+  init particle 3: |S|=189  fitness=0.28086
+  init particle 4: |S|=205  fitness=0.27929
+  init particle 5: |S|=185  fitness=0.27959
+  init particle 6: |S|=219  fitness=0.27408
+  init particle 7: |S|=195  fitness=0.28052
+  init particle 8: |S|=209  fitness=0.27897
+  init particle 9: |S|=186  fitness=0.27762
+  init particle 10: |S|=207  fitness=0.28192
+  init particle 11: |S|=186  fitness=0.27856
+  init particle 12: |S|=178  fitness=0.27780
+  init particle 13: |S|=197  fitness=0.28197
+  init particle 14: |S|=217  fitness=0.27653
+  EO iter   1/25  best_fit=0.27280  |S*|=198  pop_mean_fit=0.27561  pool_div=0.1887  elapsed=890s
+  EO iter   2/25  best_fit=0.27180  |S*|=183  pop_mean_fit=0.27505  pool_div=0.1904  elapsed=1761s
+  EO iter   3/25  best_fit=0.27180  |S*|=183  pop_mean_fit=0.27475  pool_div=0.1888  elapsed=2454s
+  EO iter   4/25  best_fit=0.27104  |S*|=165  pop_mean_fit=0.27416  pool_div=0.1584  elapsed=3093s
+  EO iter   5/25  best_fit=0.27078  |S*|=183  pop_mean_fit=0.27336  pool_div=0.1609  elapsed=3684s
+  EO iter   6/25  best_fit=0.27078  |S*|=183  pop_mean_fit=0.27291  pool_div=0.1609  elapsed=4252s
+  EO iter   7/25  best_fit=0.27063  |S*|=163  pop_mean_fit=0.27268  pool_div=0.1495  elapsed=4838s
+  EO iter   8/25  best_fit=0.26919  |S*|=160  pop_mean_fit=0.27230  pool_div=0.1655  elapsed=5697s
+  EO iter   9/25  best_fit=0.26918  |S*|=162  pop_mean_fit=0.27182  pool_div=0.1734  elapsed=6509s
+  EO iter  10/25  best_fit=0.26918  |S*|=162  pop_mean_fit=0.27178  pool_div=0.1734  elapsed=7130s
+  EO iter  11/25  best_fit=0.26818  |S*|=149  pop_mean_fit=0.27109  pool_div=0.1553  elapsed=7841s

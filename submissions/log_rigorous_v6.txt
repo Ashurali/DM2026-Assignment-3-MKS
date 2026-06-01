@@ -1,0 +1,89 @@
+=== rigorous_threshold_search_v6.py ===
+α sweep: [0.6, 0.95] step 0.025
+L1×L2 grid: 51×51  range=±2.0
+NM multi-start: 16 starts in 6-D
+
+Train class distribution: ['L0: 0.421', 'L1: 0.426', 'L2: 0.032', 'L3: 0.060', 'L4: 0.013', 'L5: 0.048']
+
+Loading v6 + combo_v2 pieces…
+
+======================================================================
+RUN: v6
+======================================================================
+
+  α=0.600 … NM=0.7839  Peak=0.7850  Rob=0.7840  L2_F1_peak=0.369
+
+  α=0.625 … NM=0.7851  Peak=0.7855  Rob=0.7847  L2_F1_peak=0.373
+
+  α=0.650 … NM=0.7857  Peak=0.7865  Rob=0.7848  L2_F1_peak=0.372
+
+  α=0.675 … NM=0.7842  Peak=0.7860  Rob=0.7839  L2_F1_peak=0.377
+
+  α=0.700 … NM=0.7838  Peak=0.7847  Rob=0.7832  L2_F1_peak=0.376
+
+  α=0.725 … NM=0.7763  Peak=0.7762  Rob=0.7748  L2_F1_peak=0.374
+
+  α=0.750 … NM=0.7845  Peak=0.7847  Rob=0.7828  L2_F1_peak=0.365
+
+  α=0.775 … NM=0.7835  Peak=0.7856  Rob=0.7842  L2_F1_peak=0.378
+
+  α=0.800 … NM=0.7850  Peak=0.7857  Rob=0.7849  L2_F1_peak=0.382
+
+  α=0.825 … NM=0.7862  Peak=0.7879  Rob=0.7873  L2_F1_peak=0.381
+
+  α=0.850 … NM=0.7852  Peak=0.7868  Rob=0.7864  L2_F1_peak=0.385
+
+  α=0.875 … NM=0.7837  Peak=0.7876  Rob=0.7867  L2_F1_peak=0.388
+
+  α=0.900 … NM=0.7876  Peak=0.7882  Rob=0.7869  L2_F1_peak=0.398
+
+  α=0.925 … NM=0.7869  Peak=0.7882  Rob=0.7868  L2_F1_peak=0.392
+
+  α=0.950 … NM=0.7842  Peak=0.7872  Rob=0.7852  L2_F1_peak=0.394
+
+
+======================================================================
+ALL CANDIDATES: 285
+======================================================================
+
+Top-15 by OOF F1:
+rank  run      α  method             OOF   L2F1    chi2  L2 cnt
+   1  v6   0.900  grid_peak       0.7882  0.398  0.0048     252
+   2  v6   0.925  grid_peak       0.7882  0.392  0.0116     235
+   3  v6   0.825  grid_peak       0.7879  0.381  0.0168     358
+   4  v6   0.875  grid_peak       0.7876  0.388  0.0102     281
+   5  v6   0.900  nm_start_0      0.7876  0.396  0.0051     255
+   6  v6   0.825  grid_robust     0.7873  0.380  0.0165     357
+   7  v6   0.950  grid_peak       0.7872  0.394  0.0136     207
+   8  v6   0.900  grid_robust     0.7869  0.393  0.0076     301
+   9  v6   0.925  nm_start_0      0.7869  0.379  0.0104     287
+  10  v6   0.850  grid_peak       0.7868  0.385  0.0130     298
+  11  v6   0.925  grid_robust     0.7868  0.384  0.0100     200
+  12  v6   0.875  grid_robust     0.7867  0.384  0.0107     290
+  13  v6   0.650  grid_peak       0.7865  0.372  0.0124     293
+  14  v6   0.850  grid_robust     0.7864  0.385  0.0189     347
+  15  v6   0.825  nm_start_0      0.7862  0.383  0.0191     370
+
+Candidates within 0.001 of top OOF (0.7882): 6
+
+Top-10 by 'closeness to train base rates' (robustness):
+   1  v6   0.900  grid_peak       OOF=0.7882  L2F1=0.398  χ²=0.0048  counts=[2807, 3015, 252, 426, 103, 246]
+   2  v6   0.900  nm_start_0      OOF=0.7876  L2F1=0.396  χ²=0.0051  counts=[2804, 3018, 255, 425, 103, 244]
+   3  v6   0.875  grid_peak       OOF=0.7876  L2F1=0.388  χ²=0.0102  counts=[2808, 2971, 281, 484, 41, 264]
+   4  v6   0.925  grid_peak       OOF=0.7882  L2F1=0.392  χ²=0.0116  counts=[2667, 3171, 235, 470, 53, 253]
+   5  v6   0.825  grid_robust     OOF=0.7873  L2F1=0.380  χ²=0.0165  counts=[2832, 2885, 357, 459, 66, 250]
+   6  v6   0.825  grid_peak       OOF=0.7879  L2F1=0.381  χ²=0.0168  counts=[2832, 2888, 358, 458, 66, 247]
+
+Writing top-5 by OOF…
+  [top OOF #1] sub_hier_v6_rigorous_top1_a900_grid_peak.csv  OOF=0.7882  L2=0.398  χ²=0.0048
+  [top OOF #2] sub_hier_v6_rigorous_top2_a925_grid_peak.csv  OOF=0.7882  L2=0.392  χ²=0.0116
+  [top OOF #3] sub_hier_v6_rigorous_top3_a825_grid_peak.csv  OOF=0.7879  L2=0.381  χ²=0.0168
+  [top OOF #4] sub_hier_v6_rigorous_top4_a875_grid_peak.csv  OOF=0.7876  L2=0.388  χ²=0.0102
+  [top OOF #5] sub_hier_v6_rigorous_top5_a900_nm_start_0.csv  OOF=0.7876  L2=0.396  χ²=0.0051
+
+Writing top-3 robustness picks (not already top-OOF)…
+  [robust #1] sub_hier_v6_rigorous_robust1_a825_grid_robust.csv  OOF=0.7873  L2=0.380  χ²=0.0165
+
+Wrote D:\Foreign\NYCU\Semester 1\535703資料探勘 Data Mining\HW3\DM2026-Assignment-3-MKS\oof\rigorous_threshold_v6_meta.json
+
+=== rigorous_threshold_search_v6.py done ===

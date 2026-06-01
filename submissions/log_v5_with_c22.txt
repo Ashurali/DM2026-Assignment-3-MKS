@@ -1,0 +1,78 @@
+=== train_hier_v5_with_cov.py starting ===
+=== train_hier_multi_seed.py starting ===
+Features (v5): ['engineered(271)', 'catch22(132)', 'cnn_emb(256)', 'transformer_emb(128)', 'oof_xgb_v1(6)', 'oof_cat_v1(6)', 'oof_minirocket_v1(6)', 'oof_combo_full_v2(6)', 'l1l2_contrast_emb(64)', 'covariance(22)']
+X (11020, 897)  Xte (6849, 897)
+
+── Stage 1: coarse 3-way v5 (seeds=[17, 23, 41]) ──
+    [coarse seed=17] OOF F1: 0.9024
+    [coarse seed=23] OOF F1: 0.8997
+    [coarse seed=41] OOF F1: 0.9038
+Coarse v5 MS OOF F1: 0.9019
+
+── Stage 2a: fine_walk v5 (seeds=[17, 23, 41], LGBM+XGB) ──
+    [walk LGBM seed=17] OOF binary F1 on walking: 0.5507
+    [walk XGB  seed=17] OOF binary F1 on walking: 0.6749
+    [walk LGBM seed=23] OOF binary F1 on walking: 0.5568
+    [walk XGB  seed=23] OOF binary F1 on walking: 0.6670
+    [walk LGBM seed=41] OOF binary F1 on walking: 0.5693
+    [walk XGB  seed=41] OOF binary F1 on walking: 0.6759
+Fine_walk v5 MS OOF F1 on walking: 0.6089
+              precision    recall  f1-score   support
+
+          L1     0.9393    0.9923    0.9651      4695
+          L2     0.6129    0.1592    0.2528       358
+
+    accuracy                         0.9333      5053
+   macro avg     0.7761    0.5758    0.6089      5053
+weighted avg     0.9162    0.9333    0.9146      5053
+
+
+── Stage 2b: fine_other v5 (seeds=[17, 23, 41]) ──
+    [other seed=17] OOF ternary F1 on other: 0.8910
+    [other seed=23] OOF ternary F1 on other: 0.8973
+    [other seed=41] OOF ternary F1 on other: 0.8926
+Fine_other v5 MS OOF F1: 0.8959
+
+P2 v5 raw OOF F1: 0.7366  (refs: v1=0.7408, v2=0.7436, v3=0.7409, v4=0.7458)
+P2 v5 per-class F1: [0.9681, 0.9065, 0.1432, 0.7329, 0.9071, 0.7617]
+              precision    recall  f1-score   support
+
+          L0     0.9689    0.9673    0.9681      4643
+          L1     0.8747    0.9408    0.9065      4695
+          L2     0.4918    0.0838    0.1432       358
+          L3     0.6994    0.7698    0.7329       656
+          L4     0.9203    0.8944    0.9071       142
+          L5     0.8647    0.6806    0.7617       526
+
+    accuracy                         0.9009     11020
+   macro avg     0.8033    0.7228    0.7366     11020
+weighted avg     0.8916    0.9009    0.8904     11020
+
+
+OOF-tuned α: 0.855
+
+=== Variant 1: pure P2 v5 ===
+  α=0.000  cal+thresh OOF F1: 0.7609  L2=0.302
+  Wrote D:\Foreign\NYCU\Semester 1\535703資料探勘 Data Mining\HW3\DM2026-Assignment-3-MKS\submissions\sub_hier_v5_p2_only_cal_thresh.csv
+
+=== Variant 2: α auto-tuned on OOF ===
+  α=0.855  cal+thresh OOF F1: 0.7828  L2=0.371
+  Wrote D:\Foreign\NYCU\Semester 1\535703資料探勘 Data Mining\HW3\DM2026-Assignment-3-MKS\submissions\sub_hier_v5_blend_cal_thresh.csv
+
+=== Variant 3: α=0.88 (LB-validated on v4) ===
+  α=0.880  cal+thresh OOF F1: 0.7803  L2=0.370
+  Wrote D:\Foreign\NYCU\Semester 1\535703資料探勘 Data Mining\HW3\DM2026-Assignment-3-MKS\submissions\sub_hier_v5_a088_cal_thresh.csv
+
+============================================================
+RECOMMENDATION
+============================================================
+  α=0.00:    OOF cal+thresh = 0.7609  L2 = 0.302
+  α=0.855:    OOF cal+thresh = 0.7828  L2 = 0.371
+  α=0.88:    OOF cal+thresh = 0.7803  L2 = 0.370
+
+  Reference (current best LB): v4 hier_blend (α=0.88) → LB 0.8114  OOF 0.7856
+  PRIMARY (if v5 OOF beats v4 0.7856): sub_hier_v5_a088_cal_thresh.csv
+
+Logged to D:\Foreign\NYCU\Semester 1\535703資料探勘 Data Mining\HW3\DM2026-Assignment-3-MKS\submissions\log.md
+
+=== train_hier_v5_with_cov.py done ===

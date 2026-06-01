@@ -12,3 +12,10 @@ submissions/*.csv
 *.pkl
 *.pt
 .DS_Store
+# tooling / generated artifacts
+.claude/
+catboost_info/
+experiments_archive/
+*.tgz
+*.tar.gz
+eo_search.log
