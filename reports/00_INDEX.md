@@ -58,8 +58,10 @@ Both carry the validated injection; they hedge the OOF↔public divergence:
 ## 7. Reports
 - `00_INDEX.md` (this file) · `experiments.md` (chronological log + verdicts) · `findings_and_solution.md` (diagnosis + solution thesis) · `architecture.md` · `class_structure.md` · `data_structure.md` · `eda_summary.md` / `eda_deep_summary.md` · `ablation_features.md` · `literature_synthesis.md` · `final_report.md`.
 
-## 8. Next build — tilt-trajectory L1↔L2 model
-Replace the raw-6-channel sequence input (capped neural at 0.69 — noisy/gravity-dominated) with a **derived, clean, low-dim orientation trajectory** (pitch/roll/inclination(t), angular-speed(t), intensity(t)) fed to a focused **1D-CNN or Shapelet-Transform** as a dedicated L1↔L2 model; inject its L2 with nested-CV `w`. Targets the representation-layer bottleneck (motion-shape), not another downstream band-aid. Set expectations: 1 Hz/no-gyro floor still binds; the summary-stat version already proved the signal is real (+0.0046 LB).
+## 8. Build #1 — tilt-trajectory L1↔L2 model — DONE (negative)
+Derived a clean low-dim orientation trajectory (pitch/roll/incl/angular-speed/intensity/grav-mag, per-file z-scored) → 1D-CNN (`src/models/train_orient_traj.py`, `scripts/orient_traj_integrate.py`). **Result: L1↔L2 sep 0.5785 < summary-stat orient_lgbm (0.617) < production (0.657); injection +0.0004 robust, does not beat 0.8200.** Motion-shape hypothesis falsified at 1 Hz. Meta-finding: **GBDT-on-summary-features > neural-on-sequence** for this data. Representation-layer attack exhausted → **0.8200 is the realizable ceiling.**
+
+The remaining levers are non-modeling: (a) de-risk the threshold grid for the private split (hygiene, not a gain), (b) a *fundamentally* different approach to L2 (beyond the 1 Hz/no-gyro data we're permitted).
 
 ## 9. Reproduction / ops notes
 - **Server:** `nycu813@140.113.86.130` (`ICCL-S3-251230`), repo `~/mike/DM2026-Assignment-3-MKS`, conda env `dm2026-a3` at `~/anaconda3/envs/dm2026-a3`. **No git on server** — sync via scp.
