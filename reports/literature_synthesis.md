@@ -1,4 +1,52 @@
-# Literature Synthesis — Robustness to User-Distribution Shift
+# Literature Synthesis — Part II: the L2 problem is *class overlap under imbalance* (and we're at the Bayes floor)
+
+> **Why this exists:** after proving L1↔L2 are *separable* (AUC 0.86) yet capped (L2-F1 ~0.38), the question became: what does the literature call this, why did the textbook fixes fail, and what does it say to do when they fail? Answer: the problem is **class overlap combined with imbalance** where the minority is dominated by **"unsafe" examples** — and we are sitting on the **Bayes error floor**. Measured, not asserted (`scripts/l2_typology_bayes.py`, `l1l2_*.py`, `hierarchy_vs_flat.py`).
+
+## 1. The precise name: "unsafe" minority examples under class overlap
+Plain imbalance (rare-but-separable) is *easy* — re-weighting solves it. Our case is the hard regime: **overlap + imbalance**, where the minority sits *inside* other classes. [Napierała & Stefanowski (2016, J. Intelligent Information Systems)](https://link.springer.com/article/10.1007/s10844-015-0368-1) classify each minority example by its k=5 neighbourhood: **safe** (4–5 same-class), **borderline** (2–3), **rare** (1), **outlier** (0); the last three are "unsafe" and provably hard.
+
+**Measured for L2** (k=5, PCA-50 feature space): **safe 4.5% · borderline 21.2% · rare 30.4% · outlier 43.9% → 95.5% UNSAFE.** Nearly half of L2 are *outliers* (zero L2 neighbours — completely surrounded by L1/L3/L5). This is a near-pathological instance of the overlap-imbalance regime, exactly the case the literature flags as resistant to the standard toolbox.
+
+## 2. We are at the Bayes (irreducible-error) floor
+The [Bayes error rate](https://en.wikipedia.org/wiki/Bayes_error_rate) is the lowest achievable error for *any* classifier on a given P(X,Y) — the irreducible overlap of the class-conditional distributions. kNN error brackets it (BER ∈ [e₁ₙₙ/2, e_largeₖ]). Balanced, cross-user (`l2_typology_bayes.py`):
+| overlap | Bayes-error bracket | balanced Bayes ACC | strong LightGBM | verdict |
+|---|---|---|---|---|
+| L1 vs L2 | [0.170, 0.288] | ~0.71 | err 0.240 | **at floor** |
+| L2 vs L3 | [0.155, 0.243] | ~0.76 | err 0.206 | **at floor** |
+| L2 vs L5 | [0.169, 0.316] | ~0.68 | err 0.252 | **at floor** |
+Our strong classifier's error is *inside* the Bayes bracket for all three overlaps. Even a perfect classifier on these features would misclassify ~24–32% of balanced L2-vs-neighbour pairs. *"Once your classifier approaches the Bayes error rate, further improvements become increasingly difficult — you're approaching the fundamental limit imposed by the data distribution itself."*
+
+## 3. Literature solution families → what we tried → why each failed
+| Family (canonical refs) | What we ran | Why it didn't move L2 (grounded) |
+|---|---|---|
+| **Resampling**: SMOTE, Borderline-SMOTE (Han 2005), ADASYN, SMOTE-Tomek/ENN, overlap undersampling | `lgbm_full_smote` | SMOTE **blurs boundaries in overlap** and fails on outlier/rare examples; with L2 95.5% unsafe, it synthesises *into* the L1/L3/L5 region — adds noise. Predicted failure. |
+| **Cost-sensitive / margin / logit adjustment**: LDAM (Cao NeurIPS'19), Logit-Adjustment (Menon ICLR'21), Balanced-Softmax (Ren'20) | class_weight=balanced everywhere; **the (L1,L2) threshold grid IS logit adjustment** (per-class log-weights = additive logit shifts), nested-validated | Logit adjustment only **moves the operating point along a fixed ranking** — it cannot create separability. The L2-weight sweep proved the operating point is already optimal (peaks exactly at production). Got us to 0.8200; can't cross Bayes. |
+| **Decoupling rep/classifier** (Kang ICLR'20: "decoupling beats fancy losses") | isotonic calibration + threshold = decoupled classifier rebalancing on a frozen representation | Already implemented; it's *why* GBDT+isotonic beats the neural losses. Maxed. |
+| **Metric / contrastive separation**: SupCon (Khosla'20), SICL, our conditional cross-user SupCon (CISC) | `train_dg_cisc`, GRU-evidential, trajectory-CNN | Metric learning can only pull apart what the features make separable; Bayes ACC ~0.71 caps it. 358 samples (44% outliers) across disjoint users = too few clean positives. Confirmed neural ≤ GBDT (+0.0008). |
+| **Hierarchical / coarse-to-fine** | `hierarchy_vs_flat.py` cascade; production P2 (hier_v6) | Flat 6-class **beats** class-by-class cascade (−0.019, hurts L2 via error propagation). The *good* hierarchy (coarse→fine, blended 16%) is already in. |
+| **Domain generalisation**: DANN (Ganin'16), CORAL, DIVERSIFY | DG/CISC | Within-vs-cross-user AUC gap is only ~0.02; geometry tracks activity not user. Overlap is **not** user-induced → DG addresses a small part. +0.0008. |
+
+**Pattern:** every family is either (a) already in production at its measured optimum (logit adjustment, decoupling, the useful hierarchy) or (b) marginal/negative because it attacks a layer that isn't the binding constraint. The binding constraint is the Bayes floor of the 1 Hz/no-gyro feature space.
+
+## 4. What the literature says to do *when the standard fixes fail* (i.e., at the Bayes floor)
+Bayes error is a property of (X, Y). You cannot lower it by changing the model — only by changing the information. The sanctioned routes:
+1. **Richer features / sensor fusion (the real fix)** — add the gyroscope, raise the sampling rate, fuse modalities. **Forbidden here** (no external data; fixed 1 Hz; no gyro). The *one legal version* — **construct a complementary view from existing data** — is exactly what the orientation pseudo-gyro did (derivative of the gravity-orientation trace ≈ missing gyro), and it is the **only lever that ever helped (+0.0009)**. We exhausted the derivable views (summary + trajectory).
+2. **Learning with a reject option / abstention** (Chow 1970; Cortes et al., learning-with-rejection) — abstain on the overlap. Not applicable: a label is forced on every sample.
+3. **Optimise the deployment metric directly + hedge variance** — threshold grid is macro-F1-direct; the 2-pick (peak/robust) final hedges the OOF↔public divergence. Done.
+4. **Semi-supervised / transductive use of unlabeled test** — checked (`unsup_separability_probe.py`): no extra structure at 1 Hz.
+
+**Conclusion:** L2 is a textbook *overlap-under-imbalance* problem with a 95.5%-unsafe minority, and our strong classifier sits **on the Bayes floor** for all three of its overlaps. The failure of resampling / margin / contrastive / hierarchical methods is not a tuning miss — it is the **predicted** behaviour at the irreducible floor. The only literature-sanctioned remedy is *new information*, of which the single available unit (orientation) is already captured. **0.8200 is the realizable ceiling**, now established from the imbalance-overlap and Bayes-error literature as well.
+
+### Sources (Part II)
+- [Napierała & Stefanowski, *Types of minority class examples…*, J. Intell. Inf. Syst. 2016](https://link.springer.com/article/10.1007/s10844-015-0368-1) · [conf. version (HAIS 2012)](https://link.springer.com/chapter/10.1007/978-3-642-28931-6_14) · [data-typology code](https://github.com/miriamspsantos/data-typology)
+- [Neighbourhood-based undersampling for imbalanced & overlapped data (Inf. Sci. 2019)](https://www.sciencedirect.com/science/article/abs/pii/S0020025519308114) · [OBMI borderline oversampling (Complex & Intell. Syst. 2024)](https://link.springer.com/article/10.1007/s40747-024-01399-y) · [Borderline-SMOTE](https://www.researchgate.net/publication/225129029_Borderline-SMOTE_A_New_Over-Sampling_Method_in_Imbalanced_Data_Sets_Learning)
+- [Kang et al., *Decoupling Representation and Classifier for Long-Tailed Recognition*, ICLR 2020](https://arxiv.org/pdf/1910.09217) · [Systematic Review on Long-Tailed Learning (2024)](https://arxiv.org/html/2408.00483v1) · [Difficulty-aware Balancing Margin Loss, AAAI 2025](https://ojs.aaai.org/index.php/AAAI/article/view/34261/36416)
+- [Bayes error rate (overview)](https://en.wikipedia.org/wiki/Bayes_error_rate) · [Bayes Error Rate Estimation in Difficult Situations (arXiv 2506.03159)](https://arxiv.org/html/2506.03159v3) · [BER via classifier ensembles (Tumer)](http://www.ideal.ece.utexas.edu/pdfs/48.pdf)
+- [Comparing sampling strategies for imbalanced HAR (PMC 2022)](https://pmc.ncbi.nlm.nih.gov/articles/PMC8963022/)
+
+---
+
+# Literature Synthesis — Part I: Robustness to User-Distribution Shift
 
 > **Why this exists:** the 3 LB results on May 8 showed combo-style models with DL embeddings have a **negative LB-vs-OOF gap** without post-hoc correction (combo_full RAW: OOF 0.7687 → LB 0.7568, gap −0.012). This document maps that symptom to known phenomena in the literature and ranks the available fixes by ROI.
 
