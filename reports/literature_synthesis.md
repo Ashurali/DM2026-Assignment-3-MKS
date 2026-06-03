@@ -1,3 +1,35 @@
+# Literature Synthesis — Part III: robustness-to-distribution-shift coverage audit (the private-LB lever)
+
+> **Why this exists:** the static private LB rewards robustness and punishes public-overfit (public #1 `314540024` 0.8305 → private #9; public #10 `513559009` 0.8078 → private #5). We are #5 public / #6 private — consistent, not overfit. To improve the *private* result the lever is **generalization to the unseen split**, not raw score. This audits the robustness literature against what we actually did and flags the genuine gaps.
+
+## Covered (solid foundations)
+- **Cross-subject CV** (GroupKFold by user) + **nested CV** for *all* selection (thresholds, injection w) — the bedrock of honest generalization estimation and the reason we didn't crash like the public-chasers.
+- **Robust thresholds** (explicitly trade OOF for robustness) + **per-class isotonic calibration** (5-fold OOF).
+- **Multi-seed base models** + **P1/P2 blend** — variance reduction.
+- **Domain generalization**: DANN, conditional cross-user SupCon (CISC), SICL, cross-subject mixup. *Measured LIMITED headroom* — the L1↔L2 overlap is intrinsic, not user-induced (within-vs-cross-user AUC gap ≈ 0.02; geometry ARI tracks activity 0.319 vs user 0.005).
+- **Pseudo-labeling / transductive** (`lgbm_combo_v2_pl`).
+- **Adversarial-validation DETECTION**: domain-classifier AUC **0.732** (moderate train↔test covariate shift) already measured in `unsup_separability_probe.py`.
+
+## Genuine gaps (uncovered, robustness-relevant)
+**A. Test-prior / label-shift correction — Saerens EM (2002), BBSE (Lipton et al. ICML 2018).** *[HIGH value, cheap, principled]* The private split (disjoint users) may carry **different class priors**; our threshold grid is tuned to TRAIN priors → miscalibrated under prior shift. Saerens-EM / BBSE estimate the test prior from the model's *own* predictions (+ confusion matrix) and re-weight posteriors — **no retraining, no labels**. This is principled adaptation to the unseen distribution = exactly private robustness, and it's testable on cross-user OOF by simulating a prior shift. NOT public-chasing.
+
+**B. Adversarial-validation feature PRUNING / invariant feature selection.** *[HIGH value, cheap]* We measured the train↔test shift (AUC 0.73) but never *removed* the features driving it — those are subject-specific **spurious** features that hurt cross-subject generalization. Rank features by train/test discriminability → ablate the top ones → re-check cross-user OOF. (This is the acknowledged TODO: "EO with a penalty against user-predictive features.")
+
+**C. Group DRO / worst-user optimization; Just-Train-Twice (JTT).** *[MEDIUM, caveated]* Minimize the **worst-USER** loss (Sagawa et al. ICLR 2020) → robust to the worst-case subject. Caveats: Group-DRO can *underperform* ERM on subpopulation shift (Koh et al. 2020); it's built for overparameterized NNs and is non-trivial to bolt onto a GBDT stack. JTT (Liu et al. ICML 2021) = a simpler "upweight the ERM errors and retrain" alternative.
+
+**D. Further DG variants — CORAL, IRM, Fishr, MLDG, AFFAR.** *[LOW-MEDIUM]* Same family as what we already ran; our measurement (overlap is not user-induced) caps the headroom. A 2025 HAR survey notes accuracy can drop 42% under heterogeneous domain shift — but our shift is *within-dataset* and mild (AUC 0.73), so the big DG gains reported across *datasets* won't transfer.
+
+## Recommendation
+Pursue **A (label-shift correction)** and **B (adversarial feature pruning)** — both cheap, principled, testable on cross-user OOF, and directly aimed at the private split rather than the public board. A is the most apt: it adapts to the unseen distribution *by construction*. Expected gains are modest (we already generalize well), but they're the *right* robustness moves and carry no public-chasing risk.
+
+### Sources (Part III)
+- [Sagawa et al., *Distributionally Robust Neural Networks for Group Shifts*, ICLR 2020](https://arxiv.org/abs/1911.08731) · [group_DRO code](https://github.com/kohpangwei/group_DRO) · [Just Train Twice, ICML 2021](http://proceedings.mlr.press/v139/liu21f/liu21f.pdf)
+- [Lipton et al., *Detecting and Correcting for Label Shift with Black Box Predictors* (BBSE), ICML 2018](https://arxiv.org/abs/1802.03916) · [Label Shift Estimation: A Bayesian Approach, WACV 2024](https://openaccess.thecvf.com/content/WACV2024/papers/Ye_Label_Shift_Estimation_for_Class-Imbalance_Problem_A_Bayesian_Approach_WACV_2024_paper.pdf)
+- [Adversarial validation for train-test divergence (overview)](https://unfoldai.com/adversarial-validation/) · [Managing dataset shift by adversarial validation, arXiv 2112.10078](https://arxiv.org/pdf/2112.10078)
+- [Towards Generalizable HAR: A Survey, arXiv 2508.12213](https://arxiv.org/pdf/2508.12213) · [DIVERSIFY (cross-person), arXiv 2406.04609](https://arxiv.org/pdf/2406.04609) · [AFFAR / Domain Generalization for HAR, ACM TIST](https://dl.acm.org/doi/10.1145/3552434)
+
+---
+
 # Literature Synthesis — Part II: the L2 problem is *class overlap under imbalance* (and we're at the Bayes floor)
 
 > **Why this exists:** after proving L1↔L2 are *separable* (AUC 0.86) yet capped (L2-F1 ~0.38), the question became: what does the literature call this, why did the textbook fixes fail, and what does it say to do when they fail? Answer: the problem is **class overlap combined with imbalance** where the minority is dominated by **"unsafe" examples** — and we are sitting on the **Bayes error floor**. Measured, not asserted (`scripts/l2_typology_bayes.py`, `l1l2_*.py`, `hierarchy_vs_flat.py`).
