@@ -7,12 +7,16 @@ Kaggle display name: **314540066**
 
 ## Status — public leaderboard
 
-| | Submission | OOF F1 | Public LB |
-|---|---|---|---|
-| **Primary** | `submissions/sub_hier_v6_a842_grid_peak.csv` | 0.7880 | **0.8154** (rank #3) |
-| **Backup** | `submissions/sub_hier_v4_a088_cal_thresh.csv` | 0.7856 | 0.8114 |
+**Best public LB = 0.8234** (`submissions/sub_pc_b20.csv`). Progression of the winning path:
 
-Both beat Baseline-3 (0.7088) by >0.10. Top of leaderboard: 0.8240.
+| Submission | Public LB | Key addition |
+|---|---|---|
+| `sub_hier_v6_a842_grid_peak.csv` | 0.8154 | GBDT stack + hierarchical blend + per-class isotonic + (L1,L2) threshold grid |
+| `sub_robust_orient_inject_w15.csv` | 0.8200 | + orientation "pseudo-gyro" L2-injection |
+| `sub_robust_orient_L2_priorcorr.csv` | 0.8220 | + test-prior correction (Saerens label-shift, β=1) |
+| **`sub_pc_b20.csv`** | **0.8234** | **+ stronger test-prior correction (β=2.0)** |
+
+Baseline-3 = 0.7088; the final submission beats it by **+0.11**. Reproduce in one command (below).
 
 ## Documentation entry points
 
@@ -27,7 +31,24 @@ Both beat Baseline-3 (0.7088) by >0.10. Top of leaderboard: 0.8240.
 | [`reports/literature_synthesis.md`](reports/literature_synthesis.md) | Related work and references |
 | [`experiments_archive/README.md`](experiments_archive/README.md) | Archived (failed) experiments with reasons |
 
-## Reproducing the submissions
+## ✅ Quick reproduction (no training — verifies the 0.8234 result in < 1 min)
+
+The frozen base-model OOF + test probabilities are committed in `oof/`, so the winning
+submission regenerates **deterministically from a clean clone, with no GPU and no retraining**:
+
+```bash
+python -m venv .venv
+# Windows: .\.venv\Scripts\Activate.ps1   |   Linux/Mac: source .venv/bin/activate
+pip install -r requirements.txt
+python scripts/reproduce_final.py          # -> submissions/sub_pc_b20.csv  (== public LB 0.8234)
+```
+
+`reproduce_final.py` runs the full final pipeline (blend → per-class isotonic → Saerens
+test-prior correction β=2.0 → orientation L2-injection → robust threshold) and asserts the
+exact winning class counts (L2=314, L3=559). Expected console output ends with
+`WROTE sub_pc_b20.csv … [reproduction verified]`.
+
+## Full pipeline (from raw data — retrains every base model)
 
 ```powershell
 # Setup
@@ -59,10 +80,15 @@ python scripts/eo_feature_select.py \
 python scripts/train_hier_v4_and_submit.py --gpu --seeds 17 23 41
 #   → submissions/sub_hier_v4_a088_cal_thresh.csv
 
-#   Primary (EO-selected features, ~25 min):
+#   Primary base (EO-selected features, ~25 min):
 python scripts/train_hier_v6_eo_selected.py --seeds 17 23 41
 python scripts/threshold_grid_v6.py
-#   → submissions/sub_hier_v6_a842_grid_peak.csv
+#   → submissions/sub_hier_v6_a842_grid_peak.csv  (0.8154)
+
+# Phase E — Final winning stages
+python scripts/orient_pseudogyro_model.py   # orientation pseudo-gyro source -> oof/orient_lgbm_*.npy
+python scripts/reproduce_final.py           # blend+isotonic+prior-correct+inject+threshold -> 0.8234
+#   → submissions/sub_pc_b20.csv
 ```
 
 ## Layout
@@ -94,6 +120,7 @@ DM2026-Assignment-3-MKS/
 | **Per-class isotonic + log-multiplier thresholds** | Recovers minority-class recall lost by softmax bias toward majority classes |
 | **α-blend of flat-LGBM (P1) + hierarchical (P2)** | P1 = broad signal, P2 = regularization against user-shift |
 | **Multi-seed averaging** (seeds 17, 23, 41) | Variance reduction across LGBM seed sensitivity |
-| **L1↔L2 contrastive triplet-MLP embedding** | Targeted boundary-fix attempt; small but positive contribution |
+| **Orientation "pseudo-gyro" L2-injection** | Gravity is *not* removed + wrist-worn ⇒ per-second mean traces wrist orientation; its derivative ≈ the missing gyroscope, giving complementary L2 signal (0.8154→0.8200) |
+| **Test-prior correction** (Saerens label-shift, β=2.0) | Test has more L2/L3 than train; adapt posteriors to the *measured* test prior before thresholding (0.8200→0.8234). Estimated from the whole test set ⇒ robust for the private split |
 
 See `reports/architecture.md` for the full architecture diagram and exact parameters.
