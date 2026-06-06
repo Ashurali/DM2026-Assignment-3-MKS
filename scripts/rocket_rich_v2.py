@@ -40,7 +40,7 @@ def build_channels(seq):
         dd = np.diff(a, axis=1); return np.concatenate([dd[:, :1], dd], axis=1)
     jerk = np.sqrt(d(mx)**2 + d(my)**2 + d(mz)**2)
     return np.stack([mx, my, mz, sx, sy, sz, mag_m, mag_s, pitch, roll, incl, jerk,
-                     d(pitch), d(roll)], axis=1).astype(np.float32)
+                     d(pitch), d(roll)], axis=1).astype(np.float64)   # MultiRocket numba needs f64
 
 
 Xtr = build_channels(seqtr); Xte = build_channels(seqte)

@@ -71,7 +71,7 @@ for C in [0.1, 0.5]:
     for tr, va in GroupKFold(5).split(Ftr, groups=g):
         clf = LogisticRegression(C=C, max_iter=3000, class_weight="balanced",
                                  multi_class="multinomial", n_jobs=-1)
-        clf.fit(Ftr[tr], y[tr]); oof[va, clf.classes_] = clf.predict_proba(Ftr[va])
+        clf.fit(Ftr[tr], y[tr]); oof[np.ix_(va, clf.classes_)] = clf.predict_proba(Ftr[va])
     oof = oof / oof.sum(1, keepdims=True)
     m = f1_score(y, oof.argmax(1), average="macro")
     wm = (y == 1) | (y == 2); pb = oof[wm][:, [1, 2]]; pb = pb / pb.sum(1, keepdims=True)
