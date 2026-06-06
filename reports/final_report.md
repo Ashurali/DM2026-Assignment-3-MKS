@@ -175,6 +175,8 @@ cutting redundant high-intensity features the model was overfitting on its 142 f
 | **+ test-prior correction** (Saerens, β=1) | 0.7808 | **0.8220** | **+0.0020** |
 | **+ stronger test-prior correction** (β=2.0) | 0.7758 | **0.8234** | **+0.0014** |
 
+> *Threshold note: the base row uses the OOF-optimal "peak" thresholds (OOF 0.7880); from the orientation row onward we use the "robust" thresholds (OOF 0.7864) that generalize better on the public LB. So the orientation row's OOF reflects the threshold switch **and** the injection (the injection alone is +0.0009 OOF on robust). The LB column is the ground-truth comparison.*
+
 **Key finding — OOF and LB diverge by *design*, not noise.** The prior-correction stages have the *lowest*
 OOF yet the *highest* LB. The reason: the **test set has a different class prior than train** — Saerens-EM
 (label-free, estimated from the whole test set) puts L2 at ≈0.041 vs 0.033 in train and L3 at ≈0.073 vs

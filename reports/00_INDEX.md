@@ -15,7 +15,7 @@ Master map of the architecture, results, code, and documents. Start here.
 ## 2. Production architecture (signal flow)
 ```
 RAW (1Hz, 6ch×300, gravity-laden, wrist)
- → FEATURES: 271 stats + catch22 + 12 families (orientation used STATICALLY)
+ → FEATURES: 271 stats + catch22 + 11 families (orientation used STATICALLY)
  → BASE: P1 = LGBM combo stacker (805 cols)   P2 = hier (Coarse→Fine_walk[LGBM+XGB]→Fine_other)
  → BLEND  α=0.842·P1 + 0.158·P2
  → per-class ISOTONIC (5-fold GroupKFold OOF)
