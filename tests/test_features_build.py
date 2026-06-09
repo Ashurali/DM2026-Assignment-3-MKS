@@ -30,7 +30,10 @@ def _sample_paths(n: int = 10):
     if not META_TRAIN.exists():
         pytest.skip("meta_train.parquet not present — run notebooks/01_eda.py first")
     meta = pd.read_parquet(META_TRAIN).head(n)
-    return meta["path"].tolist(), meta["file_id"].tolist()
+    paths, ids = meta["path"].tolist(), meta["file_id"].tolist()
+    if not paths or not Path(paths[0]).exists():
+        pytest.skip("raw per-file CSVs not present at the recorded paths (data/ is gitignored)")
+    return paths, ids
 
 
 def test_build_features_shape_and_no_nan():

@@ -10,8 +10,11 @@ Outputs:
 - log row appended to `submissions/log.md`
 """
 from __future__ import annotations
-from sklearnex import patch_sklearn
-patch_sklearn()
+try:  # optional Intel scikit-learn speedup; not required (absent from requirements.txt)
+    from sklearnex import patch_sklearn
+    patch_sklearn()
+except Exception:
+    pass
 import json
 from pathlib import Path, PureWindowsPath
 from datetime import date
@@ -99,7 +102,7 @@ def main() -> None:
         min_data_in_leaf=20,
         verbose=-1,
         seed=SEED,
-        device="cuda",  
+        device="cpu",  # CPU by default so this Day-1 baseline runs anywhere (was "cuda" on the GPU server)
         gpu_device_id=0,      
         num_threads=16,
         gpu_use_dp=False

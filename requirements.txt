@@ -1,3 +1,5 @@
+# Core deps to reproduce the final result (scripts/reproduce_final.py):
+#   numpy, pandas, scikit-learn  — everything below those is only for the full retrain.
 numpy>=1.26
 pandas>=2.1
 scipy>=1.11
@@ -6,7 +8,10 @@ lightgbm>=4.0
 xgboost>=2.0
 catboost>=1.2
 # Time-series specific feature libraries (Tier-1 expansion)
-pycatch22>=0.4    # 22 curated time-series features
+# pycatch22 needs a C compiler (no prebuilt wheel on some platforms) and is OPTIONAL:
+# the feature code guards its absence (have_c22) and reproduce_final.py does not use it.
+# Enable for full feature parity when retraining:  pip install pycatch22
+# pycatch22>=0.4
 sktime>=0.30      # for MiniRocket
 # tsfresh is heavy and slow — install on demand if EfficientFCParameters subset is needed
 # tsfresh>=0.20

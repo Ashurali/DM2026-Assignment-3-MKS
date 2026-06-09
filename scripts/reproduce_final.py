@@ -31,7 +31,6 @@ from sklearn.model_selection import GroupKFold
 
 ROOT = Path(__file__).resolve().parents[1]
 OOF, DATA, SUB = ROOT / "oof", ROOT / "data", ROOT / "submissions"
-SUB.mkdir(exist_ok=True)
 N = 6
 ALPHA = 0.842                 # blend weight on P1 (tuned, nested-CV)
 ORIENT_W = 0.15               # orientation L2-injection weight (nested-CV)
@@ -39,20 +38,11 @@ PRIOR_BETA = 2.0              # test-prior correction strength (LB-selected; see
 # "robust" per-class threshold log-weights (frozen; see oof/threshold_grid_v6_meta.json)
 ROBUST = np.array([0.4124252058711867, -0.20, 0.90,
                    0.4628951701768874, -0.239947242877496, -0.42948082285098554])
-
-meta = pd.read_parquet(DATA / "meta_train.parquet")
-y = meta["label"].values.astype(int)
-groups = meta["user_id"].values
-test_ids = pd.read_parquet(DATA / "meta_test.parquet")["file_id"].values.astype(int)
-load = lambda n: np.load(OOF / n).astype(np.float64)
-p1, p1t = load("lgbm_combo_combo_full_v2_oof.npy"), load("lgbm_combo_combo_full_v2_test_probs.npy")
-p2, p2t = load("hier_v6_pipeline2_oof.npy"), load("hier_v6_pipeline2_test_probs.npy")
-og, ogt = load("orient_lgbm_oof.npy"), load("orient_lgbm_test_probs.npy")
 gkf = GroupKFold(5)
 norm = lambda a: a / np.clip(a.sum(1, keepdims=True), 1e-12, None)
 
 
-def isotonic_calibrate(oof_raw, test_raw):
+def isotonic_calibrate(oof_raw, test_raw, groups, y):
     """Per-class isotonic; train side is 5-fold GroupKFold OOF (no leakage), test side
     is fit on all train. Deterministic."""
     cal = np.zeros_like(oof_raw)
@@ -86,32 +76,47 @@ def inject_L2(probs, source, w):
     return norm(out)
 
 
-# ---- 1+2: blend, then isotonic-calibrate both sides ----
-cal, calt = isotonic_calibrate(norm(ALPHA * p1 + (1 - ALPHA) * p2),
-                               norm(ALPHA * p1t + (1 - ALPHA) * p2t))
-oc, oct_ = isotonic_calibrate(norm(og), norm(ogt))
+def main():
+    SUB.mkdir(exist_ok=True)
+    meta = pd.read_parquet(DATA / "meta_train.parquet")
+    y = meta["label"].values.astype(int)
+    groups = meta["user_id"].values
+    test_ids = pd.read_parquet(DATA / "meta_test.parquet")["file_id"].values.astype(int)
+    load = lambda n: np.load(OOF / n).astype(np.float64)
+    p1, p1t = load("lgbm_combo_combo_full_v2_oof.npy"), load("lgbm_combo_combo_full_v2_test_probs.npy")
+    p2, p2t = load("hier_v6_pipeline2_oof.npy"), load("hier_v6_pipeline2_test_probs.npy")
+    og, ogt = load("orient_lgbm_oof.npy"), load("orient_lgbm_test_probs.npy")
 
-# ---- 3: estimate the test prior (label-free) and correct toward it ----
-train_prior = np.bincount(y, minlength=N) / len(y)
-test_prior = saerens_test_prior(calt, train_prior)
-w_prior = (test_prior / train_prior) ** PRIOR_BETA
-print("train prior :", np.round(train_prior, 4), flush=True)
-print("test prior  :", np.round(test_prior, 4), "  (Saerens, label-free)", flush=True)
-print("prior boost :", np.round(w_prior, 3), f"  (beta={PRIOR_BETA})", flush=True)
-calt_corr = norm(calt * w_prior)
+    # ---- 1+2: blend, then isotonic-calibrate both sides ----
+    cal, calt = isotonic_calibrate(norm(ALPHA * p1 + (1 - ALPHA) * p2),
+                                   norm(ALPHA * p1t + (1 - ALPHA) * p2t), groups, y)
+    oc, oct_ = isotonic_calibrate(norm(og), norm(ogt), groups, y)
 
-# ---- 4+5: orientation L2-injection, then robust threshold + argmax ----
-final_test = inject_L2(calt_corr, oct_, ORIENT_W)
-pred = (final_test * np.exp(ROBUST)).argmax(1)
+    # ---- 3: estimate the test prior (label-free) and correct toward it ----
+    train_prior = np.bincount(y, minlength=N) / len(y)
+    test_prior = saerens_test_prior(calt, train_prior)
+    w_prior = (test_prior / train_prior) ** PRIOR_BETA
+    print("train prior :", np.round(train_prior, 4), flush=True)
+    print("test prior  :", np.round(test_prior, 4), "  (Saerens, label-free)", flush=True)
+    print("prior boost :", np.round(w_prior, 3), f"  (beta={PRIOR_BETA})", flush=True)
+    calt_corr = norm(calt * w_prior)
 
-# OOF macro-F1 of the orient-injected blend (train side; prior-corr is test-only) for reference
-oof_pred = (inject_L2(cal, oc, ORIENT_W) * np.exp(ROBUST)).argmax(1)
-print(f"\nOOF macro-F1 (train, orient-injected) = {f1_score(y, oof_pred, average='macro'):.4f}", flush=True)
-cnt = np.bincount(pred, minlength=N)
-print(f"test predicted class counts = {cnt}  (L2={cnt[2]}, L3={cnt[3]})", flush=True)
+    # ---- 4+5: orientation L2-injection, then robust threshold + argmax ----
+    final_test = inject_L2(calt_corr, oct_, ORIENT_W)
+    pred = (final_test * np.exp(ROBUST)).argmax(1)
 
-# reproduction check: the winning submission has these exact class counts
-assert cnt[2] == 314 and cnt[3] == 559, f"REPRODUCTION MISMATCH: L2={cnt[2]} L3={cnt[3]} (expected 314/559)"
-out = SUB / "sub_pc_b20.csv"
-pd.DataFrame({"Id": test_ids, "Label": pred.astype(int)}).to_csv(out, index=False)
-print(f"\nWROTE {out.name}  ({len(pred)} rows)  == Kaggle public 0.8234  [reproduction verified]", flush=True)
+    # OOF macro-F1 of the orient-injected blend (train side; prior-corr is test-only) for reference
+    oof_pred = (inject_L2(cal, oc, ORIENT_W) * np.exp(ROBUST)).argmax(1)
+    print(f"\nOOF macro-F1 (train, orient-injected) = {f1_score(y, oof_pred, average='macro'):.4f}", flush=True)
+    cnt = np.bincount(pred, minlength=N)
+    print(f"test predicted class counts = {cnt}  (L2={cnt[2]}, L3={cnt[3]})", flush=True)
+
+    # reproduction check: the winning submission has these exact class counts
+    assert cnt[2] == 314 and cnt[3] == 559, f"REPRODUCTION MISMATCH: L2={cnt[2]} L3={cnt[3]} (expected 314/559)"
+    out = SUB / "sub_pc_b20.csv"
+    pd.DataFrame({"Id": test_ids, "Label": pred.astype(int)}).to_csv(out, index=False)
+    print(f"\nWROTE {out.name}  ({len(pred)} rows)  == Kaggle public 0.8234  [reproduction verified]", flush=True)
+
+
+if __name__ == "__main__":
+    main()
