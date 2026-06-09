@@ -24,6 +24,7 @@ import pandas as pd
 import lightgbm as lgb
 
 from src.utils.cv import cv_score, to_submission
+from src.utils.lgbm import lgbm_device
 from src.features.basic import build_dataset
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -102,7 +103,7 @@ def main() -> None:
         min_data_in_leaf=20,
         verbose=-1,
         seed=SEED,
-        device="cpu",  # CPU by default so this Day-1 baseline runs anywhere (was "cuda" on the GPU server)
+        **lgbm_device(),  # auto-GPU when a GPU-enabled LightGBM build is present, else CPU
         gpu_device_id=0,      
         num_threads=16,
         gpu_use_dp=False

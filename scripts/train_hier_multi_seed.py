@@ -41,6 +41,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from src.utils.hier_common import build_feature_blocks, make_class_weights, label_to_super, ROOT
 from src.utils.cv import make_folds
+from src.utils.lgbm import lgbm_device
 
 
 def parse_args():
@@ -66,8 +67,7 @@ def train_coarse_one_seed(X, Xte, y3, folds, seed, gpu, nbr):
         verbose=-1, seed=seed, bagging_seed=seed + 1, feature_fraction_seed=seed + 2,
         data_random_seed=seed + 3, num_threads=16,
     )
-    if gpu:
-        params.update(device="cuda", gpu_device_id=0, gpu_use_dp=False)
+    params.update(**lgbm_device())  # auto-GPU when available, else CPU
     oof = np.zeros((len(y3), 3), dtype=np.float64)
     test_probs_sum = np.zeros((len(Xte), 3), dtype=np.float64)
     for k, (tr, va) in enumerate(folds):
@@ -116,8 +116,7 @@ def fine_walk_lgbm_seed(X, Xte, y_bin, walk_mask, folds, seed, gpu, nbr):
         verbose=-1, seed=seed, bagging_seed=seed + 1, feature_fraction_seed=seed + 2,
         data_random_seed=seed + 3, num_threads=16,
     )
-    if gpu:
-        params.update(device="cuda", gpu_device_id=0, gpu_use_dp=False)
+    params.update(**lgbm_device())  # auto-GPU when available, else CPU
     oof = np.zeros(len(y_bin), dtype=np.float64)
     test_sum = np.zeros(len(Xte), dtype=np.float64)
     for k, (tr, va) in enumerate(folds):
@@ -213,8 +212,7 @@ def fine_other_seed(X, Xte, y_local, other_mask, folds, seed, gpu, nbr):
         verbose=-1, seed=seed, bagging_seed=seed + 1, feature_fraction_seed=seed + 2,
         data_random_seed=seed + 3, num_threads=16,
     )
-    if gpu:
-        params.update(device="cuda", gpu_device_id=0, gpu_use_dp=False)
+    params.update(**lgbm_device())  # auto-GPU when available, else CPU
     oof = np.zeros((len(y_local), 3), dtype=np.float64)
     test_sum = np.zeros((len(Xte), 3), dtype=np.float64)
     for k, (tr, va) in enumerate(folds):

@@ -33,6 +33,7 @@ import numpy as np
 import pandas as pd
 
 from src.utils.cv import cv_score, to_submission
+from src.utils.lgbm import lgbm_device
 
 ROOT = Path(__file__).resolve().parents[2]
 N_CLASSES = 6
@@ -244,8 +245,7 @@ def main() -> None:
         bagging_fraction=0.9, bagging_freq=5, min_data_in_leaf=args.min_data,
         verbose=-1, seed=SEED, num_threads=16,
     )
-    if args.gpu:
-        base_params.update(device="cuda", gpu_device_id=0, gpu_use_dp=False)
+    base_params.update(**lgbm_device())  # auto-GPU when available, else CPU
 
     num_boost_round = args.num_boost_round
     params = base_params

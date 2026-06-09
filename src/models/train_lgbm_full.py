@@ -29,6 +29,7 @@ import pandas as pd
 import lightgbm as lgb
 
 from src.utils.cv import cv_score, to_submission
+from src.utils.lgbm import lgbm_device
 from src.features.build import build_dataset, ALL_GROUPS
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -257,9 +258,7 @@ def main() -> None:
         seed=SEED,
         num_threads=16,
     )
-    if args.gpu:
-        # LightGBM with CUDA (per the user's working server config)
-        base_params.update(device="cuda", gpu_device_id=0, gpu_use_dp=False)
+    base_params.update(**lgbm_device())  # auto-GPU when available, else CPU
 
     num_boost_round = 500
     if args.tune:

@@ -67,6 +67,13 @@ exact winning class counts (L2=314, L3=559). Expected console output ends with
 
 ## Full pipeline (from raw data — retrains every base model)
 
+> **GPU is auto-detected** for the LightGBM stages: the code probes for a GPU-enabled
+> LightGBM build and falls back to CPU if none is usable, so the `--gpu` flags below are
+> optional (kept for compatibility).
+> **Optional `catch22` features:** `pip install pycatch22` (Linux/macOS ship wheels; bare
+> Windows needs a C compiler). Not required — the code guards its absence and the
+> one-command reproduction never uses it.
+
 ```powershell
 # Setup
 python -m venv .venv
