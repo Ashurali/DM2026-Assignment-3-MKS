@@ -1,10 +1,10 @@
-# TASK_STATE — IEEE Final Report (DM2026 Assignment 3, Group 2)
+# TASK_STATE — IEEE Final Report (DM2026 Assignment 3, single author 314540066)
 
 > Execution-state tracker for producing the final **IEEE-format `.tex` report**. Read this FIRST every session.
 > (Separate from `DEV_PROGRESS.md`, which is the project development log deliverable.)
 
 ## Overall status
-**ALL PHASES DONE; agent-verified clean (zero discrepancies). ~100%** — only open item is author names.
+**ALL PHASES DONE; agent-verified clean. Author block finalized (single author, Student ID 314540066); all "Group 2" mentions removed from report, figures, and repo. Report builds with XeLaTeX (Times preserved). 100%.**
 Deliverable `report/report.tex` compiles to **6 pages**, IEEE conference template, all 4 graded questions
 answered, reproducible. PDF at `report/report.pdf`.
 
@@ -31,14 +31,14 @@ answered, reproducible. PDF at `report/report.pdf`.
 - None. Report complete and pushed.
 
 ## Next
-- **Only remaining item:** fill real author names in `report/report.tex` `\author{}` block (currently
-  "Member 1/2/3"); Group ID 2 is already stated in the abstract.
+- None. Author block = single author "吳忠賢 Michael Kurniawan Soegeng / Student ID 314540066";
+  no group, no member placeholders. All "Group 2" mentions removed from report + figures + repo.
 
 ## Key data & decisions
-- **Group ID: 2** · GitHub: https://github.com/Ashurali/DM2026-Assignment-3-MKS · Kaggle team 314540066.
+- **Single author — Student ID 314540066** (no group). GitHub: https://github.com/Ashurali/DM2026-Assignment-3-MKS · Kaggle display name 314540066.
 - **Best public LB: 0.8234** (`sub_pc_b20.csv`). Reproduce: `python scripts/reproduce_final.py`.
 - **Format (HARD RULE — do not modify):** IEEE conference (`\documentclass[conference]{IEEEtran}`); no font/spacing
-  changes. Sections: Abstract (must state Group ID 2 + GitHub) / Project Summary ≤1 pg / Proposed Method 1–3 pp /
+  changes. Sections: Abstract (single author + GitHub) / Project Summary ≤1 pg / Proposed Method 1–3 pp /
   Experiments 2–4 pp. References via `reference.bib` (real sources only).
 - **The 4 graded questions (10% each), to answer in Experiments:** (Q1) preliminary analysis + naive baselines;
   (Q2) preprocessing techniques + per-technique gain; (Q3) label↔sequence temporal alignment; (Q4) ablation.
@@ -76,6 +76,5 @@ Negatives kept concise: GRU/evidential 0.71–0.72, `blend_dlx30` 0.7734, `v6_ea
 - **Test-prior shift (Saerens, label-free):** test L2≈0.041 (train 0.033), L3≈0.073 (train 0.060) → prior-correction β=2.0.
 
 ## Open questions for Michael
-1. **Author names** for the IEEE `\author{}` block (template has "Member 1/2/3"). Group ID is 2 — who are the members?
-   (Proceeding with placeholders + Group ID 2; please provide names before final submission.)
+1. ~~Author names~~ RESOLVED: single author "吳忠賢 Michael Kurniawan Soegeng / Student ID 314540066"; no group.
 2. Confirm `report/report.tex` is the intended location (kept inside the repo so it compiles standalone with the copied `IEEEtran.cls`).

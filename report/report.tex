@@ -1,3 +1,4 @@
+% !TEX program = xelatex
 \documentclass[conference]{IEEEtran}
 \IEEEoverridecommandlockouts
 \usepackage{cite}
@@ -8,7 +9,12 @@
 \usepackage{xcolor}
 \usepackage{url}
 \usepackage{hyperref}
-
+\usepackage{xeCJK}
+% Restore the template's intended Latin fonts (XeLaTeX/fontspec otherwise defaults to
+% Latin Modern): Times -> TeX Gyre Termes, Courier -> TeX Gyre Cursor. Keeps IEEE look.
+\setmainfont{TeX Gyre Termes}
+\setmonofont{TeX Gyre Cursor}
+\setCJKmainfont{Noto Sans TC} 
 
 \def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
     T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
@@ -24,18 +30,14 @@
 {\footnotesize Data Mining Final Project, 2026 Spring}
 }
 
-\author{\IEEEauthorblockN{Member 1}
-\and
-\IEEEauthorblockN{Member 2}
-\and
-\IEEEauthorblockN{Member 3}
-}
+\author{\IEEEauthorblockN{吳忠賢 Michael Kurniawan Soegeng}
+\IEEEauthorblockA{Student ID 314540066}}
 
 \maketitle
 
 
 \begin{abstract}
-We (\textbf{Group~2}) tackle the NYCU Data Mining 2026 Assignment~3 Kaggle competition: six-class human
+We tackle the NYCU Data Mining 2026 Assignment~3 Kaggle competition: six-class human
 activity recognition (HAR) from \emph{1\,Hz aggregated} tri-axial wrist accelerometry, evaluated by
 macro-F1 under a \emph{cross-subject} (disjoint train/test users) split. Our final system is a calibrated
 gradient-boosted-tree (GBDT) stack blended with a hierarchical pipeline, augmented by two ideas tailored to
@@ -233,7 +235,7 @@ then shift the decision boundary to trade a little majority precision for a larg
 single change that converts a well-ranked model into a high macro-F1 one.
 
 \begin{table}[t]
-\caption{Kaggle public-LB progression by technique (Group 2). See Fig.~\ref{fig:prog}.}
+\caption{Kaggle public-LB progression by technique. See Fig.~\ref{fig:prog}.}
 \label{tab:prog}
 \centering
 \begin{tabular}{l c}
@@ -255,7 +257,7 @@ Hierarchical pipeline + feature selection + blend & 0.8154 \\
 \begin{figure*}[t]
 \centering
 \includegraphics[width=0.72\textwidth]{figures/kaggle_progression.png}
-\caption{Public-LB macro-F1 by milestone (Group 2). Feature engineering and calibration drive the rise to
+\caption{Public-LB macro-F1 by milestone. Feature engineering and calibration drive the rise to
 0.8154; the data-physics ideas (orientation pseudo-gyroscope, test-prior correction) add the final $+0.008$
 to reach 0.8234.}
 \label{fig:prog}
@@ -428,7 +430,7 @@ rather than a better classifier.
 
 \section{Conclusion}
 We presented a calibrated GBDT-stacking system for cross-subject human activity recognition on 1\,Hz wrist
-accelerometry that reaches public-leaderboard macro-F1 \textbf{0.8234} (Group~2). The decisive gains came not
+accelerometry that reaches public-leaderboard macro-F1 \textbf{0.8234}. The decisive gains came not
 from model capacity but from (i) a broad temporal feature catalog with calibrated, threshold-tuned decoding,
 and (ii) two data-physics ideas---an orientation \emph{pseudo-gyroscope} that recovers rotational signal from
 gravity-laden mean readings, and a label-free \emph{test-prior correction} that adapts to the shifted test

@@ -38,7 +38,7 @@ for b, v in zip(bars, vals):
     ax.text(v + 0.008, b.get_y() + b.get_height() / 2, f"{v:.4f}", va="center", fontsize=8)
 ax.set_xlim(0, 0.92)
 ax.set_xlabel("Kaggle public-leaderboard macro-F1")
-ax.set_title("Public-LB progression by milestone (Group 2)", fontsize=10)
+ax.set_title("Public-LB progression by milestone", fontsize=10)
 ax.axvline(0.8234, color="#ea4335", ls="--", lw=0.7, alpha=0.6)
 ax.grid(axis="x", ls=":", alpha=0.4)
 plt.tight_layout()

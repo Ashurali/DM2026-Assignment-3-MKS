@@ -30,7 +30,7 @@ pip install -r requirements.txt
 python scripts/reproduce_final.py        # -> submissions/sub_pc_b20.csv  (== public LB 0.8234)
 ```
 
-Rebuild the report PDF from source with `latexmk -pdf report/report.tex`. The repo is laid out so
+Rebuild the report PDF from source with `latexmk -xelatex report/report.tex` (XeLaTeX is required: the author name uses CJK glyphs via `xeCJK`; IEEE's Times body font is preserved explicitly). The repo is laid out so
 the winning path is unambiguous: **[`scripts/`](scripts/)** contains *only* the winning-path
 training and this one-command reproduction; every exploratory / negative-result script is
 separated under **[`exploration/`](exploration/)** (see its README).
