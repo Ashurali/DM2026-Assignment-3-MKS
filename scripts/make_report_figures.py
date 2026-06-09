@@ -5,6 +5,7 @@ All numbers are the verified Kaggle public scores (see TASK_STATE.md). No invent
 Run: .venv\\Scripts\\python.exe scripts\\make_report_figures.py
 """
 from pathlib import Path
+import numpy as np
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
@@ -85,4 +86,22 @@ plt.tight_layout()
 fig.savefig(FIG / "pipeline.png", dpi=200, bbox_inches="tight")
 plt.close(fig)
 print("wrote pipeline.png")
+
+# ---------------- Figure 3: per-class F1 (baseline vs final) ----------------
+classes = ["L0", "L1", "L2", "L3", "L4", "L5"]
+base_f1 = [0.964, 0.902, 0.173, 0.713, 0.896, 0.678]
+final_f1 = [0.967, 0.908, 0.384, 0.764, 0.924, 0.781]
+x = np.arange(len(classes)); w = 0.38
+fig, ax = plt.subplots(figsize=(3.4, 2.5))
+ax.bar(x - w / 2, base_f1, w, label="271-feat baseline", color="#9aa0a6", edgecolor="black", linewidth=0.4)
+ax.bar(x + w / 2, final_f1, w, label="final pipeline", color="#34a853", edgecolor="black", linewidth=0.4)
+ax.set_xticks(x); ax.set_xticklabels(classes); ax.set_ylabel("per-class F1"); ax.set_ylim(0, 1.05)
+ax.set_title("Per-class F1: baseline vs final pipeline", fontsize=9)
+ax.legend(fontsize=7, loc="lower right"); ax.grid(axis="y", ls=":", alpha=0.4)
+for xi, b, f in zip(x, base_f1, final_f1):
+    ax.text(xi + w / 2, f + 0.02, f"{f:.2f}", ha="center", fontsize=6)
+plt.tight_layout()
+fig.savefig(FIG / "per_class_f1.png", dpi=200, bbox_inches="tight")
+plt.close(fig)
+print("wrote per_class_f1.png")
 print("done:", [p.name for p in FIG.glob("*.png")])

@@ -18,12 +18,18 @@ template), 5–8 pages excl. refs, addressing the 4 graded questions, compilable
   Table III = pipeline-stage ablation (OOF+LB). Fig 1 = `pipeline.png`; Fig 2 = `kaggle_progression.png`.
 - [x] **Phase 4 — figures generated & verified** (`report/figures/pipeline.png`, `kaggle_progression.png`).
 
+- [x] **Phase 5–6 — `report/report.tex` written** (IEEE conference). All four graded questions are explicit
+  subsections in Experiments (Q1 preliminary, Q2 preprocessing+gains, Q3 temporal/label alignment, Q4
+  ablation). 3 figures + 5 tables + equations + pseudocode + Discussion + Conclusion. 9 real refs in `reference.bib`.
+
 ## In progress
-- **Phase 5–6 — writing `report/report.tex`** (IEEE conference, 5–8 pp). Expanding `report/reference.bib` with
-  real refs (LightGBM, catch22, ROCKET, InceptionTime, Saerens label-shift, isotonic calibration, Bruno ADL).
+- **Phase 7 — verify.** Compiles via `latexmk` (TeX Live 2026): **6 pages**, **0 undefined** citations/refs,
+  no overfull boxes, template preamble unchanged (algorithm shown via a `figure` float, no added package).
+  PENDING: agent fact-check of every number vs the repo, then final commit + push.
 
 ## Next
-- Phase 7 — compile (pdflatex+bibtex via TeX Live 2026), check 5–8 pages, agent fact-check, consistency.
+- Run agent fact-check on `report/report.tex`; fix any flags; push to GitHub.
+- Fill author names in the `\author` block (Open question 1).
 
 ## Key data & decisions
 - **Group ID: 2** · GitHub: https://github.com/Ashurali/DM2026-Assignment-3-MKS · Kaggle team 314540066.

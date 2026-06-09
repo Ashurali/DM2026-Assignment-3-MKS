@@ -19,3 +19,12 @@ experiments_archive/
 *.tgz
 *.tar.gz
 eo_search.log
+# LaTeX build artifacts (keep report.tex/.bib/.pdf + figures)
+report/*.aux
+report/*.log
+report/*.bbl
+report/*.blg
+report/*.out
+report/*.fls
+report/*.fdb_latexmk
+report/_build.log
