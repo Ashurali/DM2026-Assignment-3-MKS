@@ -30,6 +30,8 @@ import torch
 from torch.utils.data import DataLoader
 from sklearn.metrics import f1_score, classification_report
 
+import sys as _sys, pathlib as _pathlib  # repo-root bootstrap so `python src/models/<file>.py` works (not just -m)
+_sys.path.insert(0, str(_pathlib.Path(__file__).resolve().parents[2]))
 from src.utils.cv import make_folds, to_submission
 from src.utils.checkpoint import run_dir, save_fold, load_fold
 from src.models.cnn_bigru import CNNBiGRU, SeqDataset, worker_init_fn  # noqa: F401

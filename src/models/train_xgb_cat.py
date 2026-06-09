@@ -27,6 +27,8 @@ from pathlib import Path, PureWindowsPath
 import numpy as np
 import pandas as pd
 
+import sys as _sys, pathlib as _pathlib  # repo-root bootstrap so `python src/models/<file>.py` works (not just -m)
+_sys.path.insert(0, str(_pathlib.Path(__file__).resolve().parents[2]))
 from src.utils.cv import cv_score, to_submission
 from src.features.build import build_dataset
 

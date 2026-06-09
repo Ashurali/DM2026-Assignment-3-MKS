@@ -39,6 +39,8 @@ except ImportError:
 from sklearn.metrics import f1_score
 from sklearn.model_selection import GroupShuffleSplit
 
+import sys as _sys, pathlib as _pathlib  # repo-root bootstrap so `python src/models/<file>.py` works (not just -m)
+_sys.path.insert(0, str(_pathlib.Path(__file__).resolve().parents[2]))
 from src.utils.cv import make_folds
 from src.models.cnn_bigru import CNNBiGRU, SeqDataset, worker_init_fn
 from src.models.train_cnn_bilstm import build_or_load_seq_cache
