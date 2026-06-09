@@ -4,7 +4,9 @@ numpy>=1.26
 pandas>=2.1
 scipy>=1.11
 scikit-learn>=1.4
-lightgbm>=4.0
+lightgbm==4.3.0   # PINNED: 4.6.0 crashes mid-train (best_split_info.left_count>0 assertion at ~500
+# rounds, a known LightGBM regression); 4.3.0 trains cleanly and reproduces the reported CV. The
+# pin matters for the full retrain only — reproduce_final.py uses frozen OOFs and never trains.
 xgboost>=2.0
 catboost>=1.2
 # Time-series specific feature libraries (Tier-1 expansion)

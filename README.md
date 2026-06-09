@@ -83,11 +83,11 @@ pip install -r requirements.txt
 
 ```bash
 # Phase A — Base models (each produces OOF .npy files; already cached in oof/)
-python src/models/train_cnn_bilstm.py
-python src/models/train_transformer.py
-python src/models/train_xgb_cat.py
-python src/models/train_minirocket.py
-python src/models/train_lgbm_combo.py --name combo_full_v2
+python -m src.models.train_cnn_bilstm
+python -m src.models.train_transformer
+python -m src.models.train_xgb_cat
+python -m src.models.train_minirocket
+python -m src.models.train_lgbm_combo --name combo_full_v2
 
 # Phase B — L1↔L2 contrastive embedding (needs CNN-BiLSTM emb)
 python scripts/train_l1l2_contrastive.py --gpu --epochs 200 --margin 0.4
