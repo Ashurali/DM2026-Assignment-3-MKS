@@ -4,26 +4,24 @@
 > (Separate from `DEV_PROGRESS.md`, which is the project development log deliverable.)
 
 ## Overall status
-**Phase 0 done; on Phase 1.** ~15%. Deliverable = `report/report.tex` (IEEE conference template), 5–8 pages
-excl. refs, addressing the 4 graded questions, with real numbers + figures/tables, compilable via TeX Live 2026.
+**Phases 0–2 done; on Phases 3–4 (figures/tables).** ~40%. Deliverable = `report/report.tex` (IEEE conference
+template), 5–8 pages excl. refs, addressing the 4 graded questions, compilable via TeX Live 2026.
 
 ## Completed
-- [x] **Phase 0 — Orientation/setup.** Read template (`report.tex`, `reference.bib`); copied `IEEEtran.cls` +
-  `report.tex` + `reference.bib` into repo `report/`; confirmed TeX Live 2026 (pdflatex/xelatex/bibtex/latexmk).
-- [x] Underlying content already exists & was independently agent-fact-checked: `reports/final_report.md`
-  (markdown report), `reports/experiments.md` (full chronological log), `README.md` (run instructions),
-  `scripts/reproduce_final.py` (deterministically reproduces the 0.8234 submission).
+- [x] **Phase 0 — setup.** Copied IEEE template into `report/`; confirmed TeX Live 2026.
+- [x] **Phase 1 — `DEV_PROGRESS.md`** (feature-by-feature dev log with LB impact).
+- [x] **Phase 2 — results gathered.** All numbers in "Key data" below (Kaggle ladder, CV baselines, feature
+  ablation, pipeline-stage OOF/LB, test-prior shift) — verified from repo docs / agent-fact-checked.
+- [x] Underlying content: `reports/final_report.md`, `reports/experiments.md`, `README.md`, `scripts/reproduce_final.py`.
 
 ## In progress
-- **Phase 1 — `DEV_PROGRESS.md`** (dev log organized by feature, from git history + experiments.md).
+- **Phase 3 — presentation plan (decided):** Table I = Kaggle progression by stage; Table II = feature-group
+  ablation; Table III = pipeline-stage ablation (OOF+LB); Fig 1 = pipeline/framework diagram; Fig 2 = Kaggle
+  progression plot. Tables written inline in `.tex`; figures generated as PNGs.
+- **Phase 4 — generate** `report/figures/pipeline.png` + `report/figures/kaggle_progression.png` (matplotlib).
 
 ## Next
-- Phase 2 — confirm all results/numbers (mostly already gathered; see Key data).
-- Phase 3 — data-presentation plan (which tables/figures).
-- Phase 4 — generate figures (Kaggle-progression plot, per-class/ablation) + assemble tables.
-- Phase 5 — writing plan (section-by-section map to the spec).
-- Phase 6 — write `report/report.tex` (IEEE, 5–8 pp, 4 graded questions, figures/tables).
-- Phase 7 — verify: compile, page count 5–8, consistency report↔code↔Kaggle, agent fact-check, no hallucinations.
+- Phase 5 — writing plan (section map). Phase 6 — write `report/report.tex`. Phase 7 — compile + verify + agent fact-check.
 
 ## Key data & decisions
 - **Group ID: 2** · GitHub: https://github.com/Ashurali/DM2026-Assignment-3-MKS · Kaggle team 314540066.
