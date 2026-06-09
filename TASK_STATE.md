@@ -14,14 +14,16 @@ template), 5–8 pages excl. refs, addressing the 4 graded questions, compilable
   ablation, pipeline-stage OOF/LB, test-prior shift) — verified from repo docs / agent-fact-checked.
 - [x] Underlying content: `reports/final_report.md`, `reports/experiments.md`, `README.md`, `scripts/reproduce_final.py`.
 
+- [x] **Phase 3 — presentation plan.** Table I = Kaggle progression; Table II = feature-group ablation;
+  Table III = pipeline-stage ablation (OOF+LB). Fig 1 = `pipeline.png`; Fig 2 = `kaggle_progression.png`.
+- [x] **Phase 4 — figures generated & verified** (`report/figures/pipeline.png`, `kaggle_progression.png`).
+
 ## In progress
-- **Phase 3 — presentation plan (decided):** Table I = Kaggle progression by stage; Table II = feature-group
-  ablation; Table III = pipeline-stage ablation (OOF+LB); Fig 1 = pipeline/framework diagram; Fig 2 = Kaggle
-  progression plot. Tables written inline in `.tex`; figures generated as PNGs.
-- **Phase 4 — generate** `report/figures/pipeline.png` + `report/figures/kaggle_progression.png` (matplotlib).
+- **Phase 5–6 — writing `report/report.tex`** (IEEE conference, 5–8 pp). Expanding `report/reference.bib` with
+  real refs (LightGBM, catch22, ROCKET, InceptionTime, Saerens label-shift, isotonic calibration, Bruno ADL).
 
 ## Next
-- Phase 5 — writing plan (section map). Phase 6 — write `report/report.tex`. Phase 7 — compile + verify + agent fact-check.
+- Phase 7 — compile (pdflatex+bibtex via TeX Live 2026), check 5–8 pages, agent fact-check, consistency.
 
 ## Key data & decisions
 - **Group ID: 2** · GitHub: https://github.com/Ashurali/DM2026-Assignment-3-MKS · Kaggle team 314540066.
