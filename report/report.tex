@@ -409,6 +409,16 @@ operating-point ceiling at this 1\,Hz, gyroscope-free resolution. The entire pos
 deterministic and reproduces the 0.8234 submission from committed artifacts via
 \texttt{python scripts/reproduce\_final.py}.
 
+\subsection{Reproducibility and how to run}
+\label{sec:repro}
+The complete code is public at \href{https://github.com/Ashurali/DM2026-Assignment-3-MKS}{\color{blue}github.com/Ashurali/DM2026-Assignment-3-MKS}. The winning submission regenerates \emph{deterministically, with no GPU and no retraining}, because the frozen base-model out-of-fold and test probabilities are committed in \texttt{oof/}:
+\begin{enumerate}
+\item create and activate a virtual environment (\texttt{python -m venv .venv});
+\item install dependencies: \texttt{pip install -r requirements.txt};
+\item run \texttt{python scripts/reproduce\_final.py}, which writes \texttt{submissions/sub\_pc\_b20.csv}---identical to the public-LB \textbf{0.8234} entry---and asserts the winning class counts (L2$=$314, L3$=$559).
+\end{enumerate}
+To retrain every base model from raw data, follow the ``Full pipeline'' in \texttt{README.md}: feature build $\rightarrow$ base learners in \texttt{src/models/} $\rightarrow$ hierarchical and orientation models in \texttt{scripts/} $\rightarrow$ \texttt{reproduce\_final.py}. Exploratory and negative-result scripts are isolated under \texttt{exploration/}.
+
 \subsection{Discussion and limitations}
 Three findings define the ceiling of this task. \emph{First}, the L1$\leftrightarrow$L2 confusion is
 \emph{intrinsic class overlap} at 1\,Hz and thus not a removable user artifact: a balanced cross-user analysis
