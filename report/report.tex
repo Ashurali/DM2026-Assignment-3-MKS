@@ -411,21 +411,19 @@ deterministic and reproduces the 0.8234 submission from committed artifacts via
 
 \subsection{Discussion and limitations}
 Three findings define the ceiling of this task. \emph{First}, the L1$\leftrightarrow$L2 confusion is
-\emph{intrinsic class overlap} at 1\,Hz, not a removable user artifact: a balanced cross-user analysis
+\emph{intrinsic class overlap} at 1\,Hz and thus not a removable user artifact: a balanced cross-user analysis
 estimates an L1/L2 Bayes accuracy of only $\approx$0.71, and the strong classifier already operates at that
-floor, so no model, calibration, or threshold change closes the gap---only new \emph{information} helps,
-which is exactly why the orientation pseudo-gyroscope (adding genuine rotational signal) was the one feature
+floor, so trying different model, calibration, or threshold does little to close the gap---only new \emph{information} helps,
+which is exactly why the orientation pseudo-gyroscope (adding pseudo rotational signal) was the feature
 idea that moved the score. \emph{Second}, additional model families and views (ROCKET, InceptionTime,
 GAF/spectrogram CNNs) each rescued a few L2 boundary samples in isolation but did \emph{not} stack, because
-they compete for the same handful of ambiguous samples---further evidence of the Bayes-error floor.
-\emph{Third}, the OOF$\leftrightarrow$LB divergence we exploited is a methodological lesson: under a genuine
-prior shift, internal cross-validation \emph{systematically misranks} prior-adapted submissions (our best
+they compete for the same handful of ambiguous samples.
+\emph{Third}, the OOF$\leftrightarrow$LB divergence we exploited is a methodological lesson: under a prior shift, internal cross-validation \emph{systematically misranks} prior-adapted submissions (our best
 submission had the lowest OOF), so the public/private leaderboard---not OOF---is the correct arbiter for the
 prior-correction stage. We limit private-split risk by estimating the prior from the \emph{entire} test set
 (rather than fitting the public board) and by retaining a conservative $\beta{=}1$ variant as a robust
 alternative. The main limitation is therefore the data itself: 1\,Hz aggregation without a gyroscope caps
-the separability of the low-intensity activities, and lifting that ceiling would require richer sensor input
-rather than a better classifier.
+the separability of the low-intensity activities, and lifting that ceiling would require richer sensor input.
 
 
 \section{Conclusion}
@@ -436,8 +434,7 @@ and (ii) two data-physics ideas---an orientation \emph{pseudo-gyroscope} that re
 gravity-laden mean readings, and a label-free \emph{test-prior correction} that adapts to the shifted test
 class distribution. Ablations confirm the improvements concentrate on the overlapping minority classes, and
 our analysis locates the remaining ceiling in the 1\,Hz, gyroscope-free data itself rather than in the
-classifier. The entire pipeline is reproducible from the repository, and the report, code, and Kaggle score
-are mutually consistent.
+classifier.
 
 
 %===========================================
