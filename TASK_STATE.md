@@ -4,8 +4,9 @@
 > (Separate from `DEV_PROGRESS.md`, which is the project development log deliverable.)
 
 ## Overall status
-**Phases 0–2 done; on Phases 3–4 (figures/tables).** ~40%. Deliverable = `report/report.tex` (IEEE conference
-template), 5–8 pages excl. refs, addressing the 4 graded questions, compilable via TeX Live 2026.
+**ALL PHASES DONE; agent-verified clean (zero discrepancies). ~100%** — only open item is author names.
+Deliverable `report/report.tex` compiles to **6 pages**, IEEE conference template, all 4 graded questions
+answered, reproducible. PDF at `report/report.pdf`.
 
 ## Completed
 - [x] **Phase 0 — setup.** Copied IEEE template into `report/`; confirmed TeX Live 2026.
@@ -22,14 +23,16 @@ template), 5–8 pages excl. refs, addressing the 4 graded questions, compilable
   subsections in Experiments (Q1 preliminary, Q2 preprocessing+gains, Q3 temporal/label alignment, Q4
   ablation). 3 figures + 5 tables + equations + pseudocode + Discussion + Conclusion. 9 real refs in `reference.bib`.
 
+- [x] **Phase 7 — verify (DONE).** Compiles via `latexmk`: 6 pages, 0 undefined, 0 overfull, preamble
+  unchanged. **Cold-agent fact-check returned ZERO discrepancies** — every number matches a primary source,
+  reproduction passes, citations resolve, report↔code↔Kaggle consistent. Verdict: safe to submit.
+
 ## In progress
-- **Phase 7 — verify.** Compiles via `latexmk` (TeX Live 2026): **6 pages**, **0 undefined** citations/refs,
-  no overfull boxes, template preamble unchanged (algorithm shown via a `figure` float, no added package).
-  PENDING: agent fact-check of every number vs the repo, then final commit + push.
+- None. Report complete and pushed.
 
 ## Next
-- Run agent fact-check on `report/report.tex`; fix any flags; push to GitHub.
-- Fill author names in the `\author` block (Open question 1).
+- **Only remaining item:** fill real author names in `report/report.tex` `\author{}` block (currently
+  "Member 1/2/3"); Group ID 2 is already stated in the abstract.
 
 ## Key data & decisions
 - **Group ID: 2** · GitHub: https://github.com/Ashurali/DM2026-Assignment-3-MKS · Kaggle team 314540066.
