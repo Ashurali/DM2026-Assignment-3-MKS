@@ -13,7 +13,7 @@ answered, reproducible. PDF at `report/report.pdf`.
 - [x] **Phase 1 — `DEV_PROGRESS.md`** (feature-by-feature dev log with LB impact).
 - [x] **Phase 2 — results gathered.** All numbers in "Key data" below (Kaggle ladder, CV baselines, feature
   ablation, pipeline-stage OOF/LB, test-prior shift) — verified from repo docs / agent-fact-checked.
-- [x] Underlying content: `reports/final_report.md`, `reports/experiments.md`, `README.md`, `scripts/reproduce_final.py`.
+- [x] Underlying content: `reports/experiments.md`, `README.md`, `scripts/reproduce_final.py`. (Old `reports/final_report.md` removed — superseded by the IEEE `report/report.tex`.)
 
 - [x] **Phase 3 — presentation plan.** Table I = Kaggle progression; Table II = feature-group ablation;
   Table III = pipeline-stage ablation (OOF+LB). Fig 1 = `pipeline.png`; Fig 2 = `kaggle_progression.png`.

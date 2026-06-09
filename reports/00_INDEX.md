@@ -56,7 +56,7 @@ Both carry the validated injection; they hedge the OOF↔public divergence:
 - Throwaway debug: `experiments_archive/_*.py` (gitignored).
 
 ## 7. Reports
-- `00_INDEX.md` (this file) · `experiments.md` (chronological log + verdicts) · `findings_and_solution.md` (diagnosis + solution thesis) · `architecture.md` · `class_structure.md` · `data_structure.md` · `eda_summary.md` / `eda_deep_summary.md` · `ablation_features.md` · `literature_synthesis.md` · `final_report.md`.
+- `00_INDEX.md` (this file) · `experiments.md` (chronological log + verdicts) · `findings_and_solution.md` (diagnosis + solution thesis) · `architecture.md` · `class_structure.md` · `data_structure.md` · `eda_summary.md` / `eda_deep_summary.md` · `ablation_features.md` · `literature_synthesis.md`.
 
 ## 8. Build #1 — tilt-trajectory L1↔L2 model — DONE (negative)
 Derived a clean low-dim orientation trajectory (pitch/roll/incl/angular-speed/intensity/grav-mag, per-file z-scored) → 1D-CNN (`src/models/train_orient_traj.py`, `scripts/orient_traj_integrate.py`). **Result: L1↔L2 sep 0.5785 < summary-stat orient_lgbm (0.617) < production (0.657); injection +0.0004 robust, does not beat 0.8200.** Motion-shape hypothesis falsified at 1 Hz. Meta-finding: **GBDT-on-summary-features > neural-on-sequence** for this data. Representation-layer attack exhausted → **0.8200 is the realizable ceiling.**

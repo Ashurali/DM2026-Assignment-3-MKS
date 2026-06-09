@@ -18,18 +18,35 @@ Kaggle display name: **314540066**
 
 Baseline-3 = 0.7088; the final submission beats it by **+0.11**. Reproduce in one command (below).
 
+## 📄 The report — and how to reproduce its result
+
+The graded write-up is the IEEE-format report at **[`report/report.pdf`](report/report.pdf)**
+(LaTeX source [`report/report.tex`](report/report.tex)). Its headline number —
+**public-leaderboard macro-F1 = 0.8234** — reproduces deterministically, **with no GPU and no
+retraining**, from the frozen base-model probabilities committed in `oof/`:
+
+```bash
+pip install -r requirements.txt
+python scripts/reproduce_final.py        # -> submissions/sub_pc_b20.csv  (== public LB 0.8234)
+```
+
+Rebuild the report PDF from source with `latexmk -pdf report/report.tex`. The repo is laid out so
+the winning path is unambiguous: **[`scripts/`](scripts/)** contains *only* the winning-path
+training and this one-command reproduction; every exploratory / negative-result script is
+separated under **[`exploration/`](exploration/)** (see its README).
+
 ## Documentation entry points
 
 | File | What it covers |
 |---|---|
-| [`reports/final_report.md`](reports/final_report.md) | **Comprehensive project report** — problem, methodology, results, discussion, references |
+| [`report/report.pdf`](report/report.pdf) | **Graded IEEE report** (source `report/report.tex`) — problem, method, experiments, discussion, references |
 | [`reports/architecture.md`](reports/architecture.md) | Exact reproducible architecture for primary + backup, with all hyperparameters |
 | [`reports/experiments.md`](reports/experiments.md) | What worked / didn't — full positive and negative result table |
 | [`reports/data_structure.md`](reports/data_structure.md) | Dataset structural facts (1-Hz aggregation, disjoint users, L1↔L2 overlap) |
 | [`reports/ablation_features.md`](reports/ablation_features.md) | Feature-group ablation results (Phase 4) |
 | [`reports/eda_summary.md`](reports/eda_summary.md), [`reports/eda_deep_summary.md`](reports/eda_deep_summary.md) | Exploratory data analysis |
 | [`reports/literature_synthesis.md`](reports/literature_synthesis.md) | Related work and references |
-| [`experiments_archive/README.md`](experiments_archive/README.md) | Archived (failed) experiments with reasons |
+| [`exploration/README.md`](exploration/README.md) | Exploratory / negative-result / superseded scripts (not in the winning path), kept for transparency |
 
 ## ✅ Quick reproduction (no training — verifies the 0.8234 result in < 1 min)
 
@@ -96,18 +113,19 @@ python scripts/reproduce_final.py           # blend+isotonic+prior-correct+injec
 ```
 DM2026-Assignment-3-MKS/
 ├── README.md                  this file
+├── report/                    GRADED IEEE report: report.tex, report.pdf, figures/, reference.bib
 ├── PROJECT_PLAN.md            day-0 strategy doc (historical)
-├── data/                      cached parquet feature stacks (gitignored)
+├── data/                      meta_*.parquet committed; large feature caches gitignored
 ├── src/
 │   ├── features/              feature engineering modules
 │   ├── models/                base-model architectures + trainers
 │   └── utils/                 CV harness, EO solver, common helpers
-├── scripts/                   winning-path training/inference scripts
+├── scripts/                   winning-path only: training + one-command reproduction
+├── exploration/               exploratory / negative-result / superseded scripts (separated)
 ├── notebooks/                 exploratory notebooks
-├── oof/                       OOF probabilities + EO outputs (gitignored)
+├── oof/                       frozen OOF + test probs committed (drive reproduce_final.py)
 ├── submissions/               generated CSVs + log.md
-├── reports/                   docs + figures + final report
-└── experiments_archive/       negative-result experiments (preserved)
+└── reports/                   supporting docs, EDA summaries + figures
 ```
 
 ## Key technical choices (one-line summaries)
